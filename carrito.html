@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="es-PE">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Tu carrito · Todotil</title>
+<meta name="description" content="Productos útiles para tu casa, tu auto y tu día a día. Pago contra entrega en Lima.">
+<meta name="theme-color" content="#1D4ED8">
+<link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32.png">
+<link rel="icon" type="image/svg+xml" href="img/icon.svg">
+<link rel="apple-touch-icon" href="img/icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Todotil">
+<meta property="og:title" content="Tu carrito · Todotil">
+<meta property="og:description" content="Productos útiles para tu casa, tu auto y tu día a día. Pago contra entrega en Lima.">
+<meta property="og:image" content="img/cover-facebook.png">
+<meta property="og:locale" content="es_PE">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://gywaofxlixdzcexvdafo.supabase.co">
+<link rel="preload" href="fonts/nunito.woff" as="font" type="font/woff" crossorigin>
+<link rel="stylesheet" href="css/styles.css">
+<script src="js/config.js" defer></script>
+<script src="js/app.js" defer></script>
+<meta name="robots" content="noindex">
+<script src="js/peru.js" defer></script>
+<script src="js/checkout.js" defer></script>
+</head>
+<body>
+<header class="top" id="top"></header>
+<main class="wrap" style="padding:16px 16px 40px">
+  <h1 style="font-size:23px;margin:4px 0 12px">Tu pedido</h1>
+  <div id="cartBox"></div>
+  <form id="form" class="panel" style="margin-top:14px" hidden novalidate autocomplete="on">
+    <h2 style="margin:0 0 4px;font-size:19px">Datos de envío</h2>
+    <div class="note">💵 Pagas en efectivo o Yape cuando recibes tu pedido. [EDITAR: medios de pago aceptados]</div>
+    <div class="row2">
+      <div><label for="name">Nombre</label><input id="name" name="given-name" autocomplete="given-name" required maxlength="60"></div>
+      <div><label for="surname">Apellido</label><input id="surname" name="family-name" autocomplete="family-name" required maxlength="60"></div>
+    </div>
+    <label for="phone">Celular (WhatsApp)</label>
+    <input id="phone" name="tel" type="tel" inputmode="numeric" autocomplete="tel-national" placeholder="9XX XXX XXX" required maxlength="11">
+    <label for="dept">Departamento</label><select id="dept" required></select>
+    <div id="provBox" hidden><label for="prov">Provincia</label><input id="prov" maxlength="60"></div>
+    <label for="dist">Distrito</label><select id="distSel"></select><input id="dist" maxlength="60" placeholder="Escribe tu distrito" hidden>
+    <label for="addr">Dirección</label><input id="addr" autocomplete="street-address" placeholder="Av./Jr./Calle, número, dpto." required maxlength="200">
+    <label for="ref">Referencia <small>(ayuda al motorizado)</small></label><input id="ref" placeholder="Ej. frente al parque, puerta verde" maxlength="200">
+    <div class="row2">
+      <div><label for="dni">DNI <small>(opcional)</small></label><input id="dni" inputmode="numeric" maxlength="8"></div>
+      <div><label for="email">Correo <small>(opcional)</small></label><input id="email" type="email" autocomplete="email" maxlength="120"></div>
+    </div>
+    <label for="notes">Notas <small>(opcional)</small></label><textarea id="notes" rows="2" maxlength="500" placeholder="Horario para recibir, etc."></textarea>
+    <div id="err" class="err" hidden></div>
+    <div style="margin-top:16px"><button class="btn btn-main" id="send" type="submit">Confirmar pedido · pago contra entrega</button></div>
+    <p style="font-size:12.5px;color:var(--muted);text-align:center;margin:10px 0 0">Al confirmar aceptas que te contactemos por WhatsApp para coordinar la entrega. <a href="politicas.html">Garantía y cambios</a></p>
+  </form>
+</main>
+<footer id="foot"></footer>
+</body></html>

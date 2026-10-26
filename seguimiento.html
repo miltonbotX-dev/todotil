@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="es-PE">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Sigue tu pedido · Todotil</title>
+<meta name="description" content="Consulta el estado de tu pedido Todotil con tu código.">
+<meta name="theme-color" content="#1D4ED8">
+<link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32.png">
+<link rel="icon" type="image/svg+xml" href="img/icon.svg">
+<link rel="apple-touch-icon" href="img/icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Todotil">
+<meta property="og:title" content="Sigue tu pedido · Todotil">
+<meta property="og:description" content="Consulta el estado de tu pedido Todotil con tu código.">
+<meta property="og:image" content="img/cover-facebook.png">
+<meta property="og:locale" content="es_PE">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://gywaofxlixdzcexvdafo.supabase.co">
+<link rel="preload" href="fonts/nunito.woff" as="font" type="font/woff" crossorigin>
+<link rel="stylesheet" href="css/styles.css">
+<script src="js/config.js" defer></script>
+<script src="js/app.js" defer></script>
+<script src="js/track.js" defer></script>
+</head>
+<body>
+<header class="top" id="top"></header>
+<main class="wrap" style="padding:20px 16px 40px;max-width:560px">
+  <h1 style="font-size:23px;margin:0 0 12px">📦 Sigue tu pedido</h1>
+  <form id="tf" class="panel">
+    <label for="tcode">Código de pedido</label><input id="tcode" placeholder="TD-XXXXX" autocapitalize="characters" required maxlength="10">
+    <label for="tlast">Últimos 4 dígitos de tu celular</label><input id="tlast" inputmode="numeric" maxlength="4" required>
+    <div id="terr" class="err" hidden></div>
+    <div style="margin-top:14px"><button class="btn btn-blue" id="tbtn">Consultar</button></div>
+  </form>
+  <div id="res" style="margin-top:14px"></div>
+</main>
+<footer id="foot"></footer>
+</body></html>

@@ -1,0 +1,19 @@
+.tabs{display:flex;gap:8px;overflow-x:auto}
+.pill{background:var(--orange);color:#fff;border-radius:999px;padding:0 7px;font-size:12px;margin-left:4px}
+.orow{display:grid;grid-template-columns:1fr auto;gap:4px 10px;background:#fff;border-radius:12px;box-shadow:var(--shadow);padding:12px 14px;margin-bottom:10px;cursor:pointer;border-left:5px solid var(--line)}
+.orow.new{animation:flash 1.2s 3}.orow b{font-size:15.5px}.orow small{color:var(--muted)}
+@keyframes flash{50%{background:#FFF7ED}}
+.st{font-size:12px;font-weight:800;border-radius:999px;padding:3px 9px;align-self:start;justify-self:end;white-space:nowrap}
+.st-pendiente{background:#FFEDD5;color:#9A3412}.st-aprobado{background:#DBEAFE;color:#1E40AF}.st-enviado_a_dropi{background:#E0E7FF;color:#3730A3}
+.st-en_camino{background:#CFFAFE;color:#155E75}.st-entregado{background:#DCFCE7;color:#166534}.st-cancelado,.st-devuelto{background:#FEE2E2;color:#991B1B}
+.orow.s-pendiente{border-left-color:var(--orange)}.orow.s-entregado{border-left-color:var(--ok)}
+dialog{border:0;border-radius:18px;padding:0;width:min(640px,96vw);max-height:92vh;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+dialog::backdrop{background:rgba(15,23,42,.5)}
+#dlgBody{padding:16px}
+.kv{display:grid;grid-template-columns:110px 1fr;gap:4px 10px;font-size:14.5px}.kv span{color:var(--muted)}
+.acts{display:grid;grid-template-columns:1fr 1fr;gap:8px}.acts .btn{min-height:44px;font-size:15px}
+.btn-red{background:#fff;color:var(--bad);border:2px solid #FCA5A5}
+.prow{display:grid;grid-template-columns:56px 1fr auto;gap:10px;align-items:center;background:#fff;border-radius:12px;box-shadow:var(--shadow);padding:10px;margin-bottom:8px;cursor:pointer}
+.prow img{width:56px;height:56px;object-fit:contain;border-radius:8px;background:var(--bg)}
+.draft{background:#F1F5F9;color:#475569}.hint{color:var(--muted);font-size:13px}
+.chk{display:flex;gap:8px;align-items:center;font-weight:800;margin-top:12px}.chk input{width:22px;height:22px}
