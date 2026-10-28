@@ -10,13 +10,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   const vids = (p.videos || []).map((v) => { const [url, poster] = String(v).split("|"); return { url, poster: poster || "" }; });
   const gal = [...imgs.map((u) => ({ t: "img", u })), ...vids.map((v) => ({ t: "vid", u: v.url, poster: v.poster }))];
   const mainHTML = (g) => g.t === "vid"
-    ? `<video id="mainVid" src="${esc(g.u)}${g.poster ? "" : "#t=0.5"}" ${g.poster ? `poster="${esc(g.poster)}"` : ""} controls playsinline preload="metadata"></video>`
+    ? `<video id="mainVid" src="${esc(g.u)}${g.poster ? "" : "#t=0.5"}" ${g.poster ? `poster="${esc(g.poster)}"` : ""} controls playsinline preload="metadata" controlsList="nodownload noplaybackrate" disablePictureInPicture disableRemotePlayback oncontextmenu="return false"></video>`
     : `<img id="mainImg" src="${esc(g.u)}" alt="${esc(p.name)}">`;
   let qty = 1;
   box.innerHTML = `
     <div><div class="gal-main" id="galMain">${mainHTML(gal[0])}</div>
       ${gal.length > 1 ? `<div class="thumbs">${gal.map((g, i) => g.t === "img" ? `<img src="${esc(g.u)}" data-i="${i}" class="${i ? "" : "on"}" alt="">`
-        : `<button type="button" class="tvid" data-i="${i}" aria-label="Ver video">${g.poster ? `<img src="${esc(g.poster)}" alt="">` : `<video src="${esc(g.u)}#t=0.5" muted playsinline preload="metadata"></video>`}<span>${ic("play", 16)}</span></button>`).join("")}</div>` : ""}
+        : `<button type="button" class="tvid" data-i="${i}" aria-label="Ver video">${g.poster ? `<img src="${esc(g.poster)}" alt="">` : `<video src="${esc(g.u)}#t=0.5" muted playsinline controlsList="nodownload noplaybackrate" disablePictureInPicture disableRemotePlayback oncontextmenu="return false" preload="metadata"></video>`}<span>${ic("play", 16)}</span></button>`).join("")}</div>` : ""}
     </div>
     <div class="stack">
       <div><h1>${esc(p.name)}</h1>
@@ -63,6 +63,9 @@ function videoHTML(url) {
   m = u.match(/tiktok\.com\/.*\/video\/(\d+)/);
   if (m) return `<div class="video"><iframe src="https://www.tiktok.com/embed/v2/${m[1]}" loading="lazy" allowfullscreen></iframe></div>`;
   if (/\.(mp4|webm|mov)(\?|$)/i.test(u) || /res\.cloudinary\.com\/.+\/video\//.test(u))
-    return `<div class="video"><video src="${TD.esc(u)}" controls playsinline preload="metadata"></video></div>`;
+    return `<div class="video"><video src="${TD.esc(u)}" controls playsinline preload="metadata" controlsList="nodownload noplaybackrate" disablePictureInPicture disableRemotePlayback oncontextmenu="return false"></video></div>`;
   return `<a href="${TD.esc(u)}" target="_blank" rel="noopener">Ver video</a>`;
 }
+
+// Sin menú contextual (Guardar video) en la galería y videos
+document.addEventListener("contextmenu", (e) => { if (e.target.closest && e.target.closest("video, .gal-main, .thumbs, .video")) e.preventDefault(); });
