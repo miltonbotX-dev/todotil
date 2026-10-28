@@ -66,7 +66,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       <div style="padding-top:8px"><div class="sum"><span>Subtotal</span><b>${money(Q ? Q.subtotal : sub)}</b></div>
       <div class="sum"><span>Envío${pk.length > 1 ? ` (${pk.length} paquetes)` : ""}</span><b id="shipAmt">${shipTxt}</b></div>
       <div class="sum total"><span>${waShip ? "Total productos" : "Total a pagar al recibir"}</span><span>${money(Q && (haveDest || waShip) ? Q.total : sub)}</span></div>
-      ${waShip ? `<div class="note" id="shipNote" style="margin-top:8px">${ic("info", 18)}<span>El costo de envío no está incluido: <b>te lo confirmamos por WhatsApp antes del despacho</b>, según tu distrito.</span></div>${waUrl ? `<a class="btn btn-wa" id="waShip" style="margin-top:8px" target="_blank" rel="noopener" href="${esc(waUrl)}">${ic("message", 20)} Consultar envío por WhatsApp</a>` : ""}` : haveDest ? "" : '<div style="font-size:13px;color:var(--muted)">El costo de envío se calcula según tu distrito.</div>'}</div></div>`;
+      ${waShip ? `<div class="note" id="shipNote" style="margin-top:8px">${ic("info", 18)}<span>El costo de envío no está incluido: <b>te lo confirmamos por WhatsApp antes del despacho</b>, según tu distrito.</span></div>${waUrl ? `<a class="btn btn-wa" id="waShip" style="margin-top:8px" target="_blank" rel="noopener" href="${esc(waUrl)}">${TD.waIcon(20)} Consultar envío por WhatsApp</a>` : ""}` : haveDest ? "" : '<div style="font-size:13px;color:var(--muted)">El costo de envío se calcula según tu distrito.</div>'}</div></div>`;
     form.hidden = false;
   }
   $("#cartBox").addEventListener("click", (e) => {

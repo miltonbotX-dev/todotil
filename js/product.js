@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", async () => {
-  const { $, api, esc, money, cart, waLink, toast, ic } = TD;
+  const { $, api, esc, money, cart, waLink, toast, ic, waIcon, setWaText } = TD;
   const slug = new URLSearchParams(location.search).get("p");
   const box = $("#pd");
   const p = slug ? await api.product(slug).catch(() => null) : null;
@@ -26,7 +26,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         <div class="qty"><button type="button" id="qm" aria-label="Menos">−</button><span id="qv">1</span><button type="button" id="qp" aria-label="Más">+</button></div></div>
       <div class="sticky-buy">
         <button class="btn btn-main" id="buy">${ic("truck", 20)} Pedir contra entrega</button>
-        <a class="btn btn-wa" id="wa" target="_blank" rel="noopener" aria-label="WhatsApp" hidden>${ic("message", 22)}<span class="wa-txt"></span></a>
+        <a class="btn btn-wa" id="wa" target="_blank" rel="noopener" aria-label="WhatsApp" hidden>${waIcon(24)}<span class="wa-txt"></span></a>
       </div>
       <button class="btn btn-ghost" id="add">Agregar al carrito</button>
       <div class="perks">
@@ -38,6 +38,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       ${p.video_url ? `<div><h2 style="font-size:18px;margin:6px 0 8px">Míralo en acción</h2>${videoHTML(p.video_url)}</div>` : ""}
       ${p.long_description ? `<div><h2 style="font-size:18px;margin:6px 0 6px">Descripción</h2><div class="desc">${esc(p.long_description)}</div></div>` : ""}
     </div>`;
+  setWaText(`Hola Todotil, quiero información sobre: ${p.name} (${money(p.price)})`);
   const wa = waLink(s, `Hola Todotil, quiero pedir: ${p.name} (${money(p.price)})`);
   if (wa) { const a = $("#wa"); a.href = wa; a.hidden = false; }
   box.addEventListener("click", (e) => { const t = e.target.closest(".thumbs [data-i]"); if (!t) return;
