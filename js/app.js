@@ -82,7 +82,7 @@
     const el = $("#top"); if (!el) return;
     el.innerHTML = `<div class="strip">${ic("truck", 15)} Pago contra entrega · Pagas cuando lo recibes</div>
       <div class="wrap"><a class="brand" href="index.html"><img src="img/icon.svg" alt=""><span>Todo<b>til</b></span></a>
-      <nav><a class="icon-btn" href="seguimiento.html" title="Sigue tu pedido">${ic("package", 20)}<span class="hide-s">Mi pedido</span></a>
+      <nav><a class="icon-btn" href="seguimiento.html" aria-label="Sigue tu pedido">${ic("package", 20)}<span class="hide-s">Mi pedido</span></a>
       <a class="icon-btn" href="carrito.html" aria-label="Carrito">${ic("cart", 20)}<span class="badge" id="cartCount" hidden>0</span></a></nav></div>`;
     cart.badge();
     api.settings().then((s) => {

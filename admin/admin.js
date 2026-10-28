@@ -36,7 +36,11 @@
 
   // ---------- Auth ----------
   $("#lf").addEventListener("submit", async (e) => {
-    e.preventDefault(); $("#lerr").hidden = true; $("#lbtn").disabled = true;
+    e.preventDefault(); $("#lerr").hidden = true; UI.clearErrors($("#lf"));
+    const okE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test($("#le").value.trim()), okP = !!$("#lp").value;
+    if (!okE) UI.fieldError("le", "Escribe tu correo"); if (!okP) UI.fieldError("lp", "Escribe tu contraseña");
+    if (!okE || !okP) return (okE ? $("#lp") : $("#le")).focus();
+    $("#lbtn").disabled = true;
     const { error } = await sb.auth.signInWithPassword({ email: $("#le").value.trim(), password: $("#lp").value });
     $("#lbtn").disabled = false;
     if (error) { $("#lerr").textContent = "Correo o contraseña incorrectos"; $("#lerr").hidden = false; return; }
@@ -262,10 +266,10 @@
       $("#mGrid").innerHTML = media.map((m, i) => `<div class="mitem${i === 0 && m.type === "img" ? " main" : ""}" data-i="${i}">
         ${m.type === "img" ? `<img src="${esc(m.url)}" alt="">` : `<video src="${esc(m.url)}#t=0.5" ${m.poster ? `poster="${esc(m.poster)}"` : ""} muted playsinline preload="metadata"></video><span class="mplay">${ic("play", 14)}</span>`}
         ${i === 0 && m.type === "img" ? `<span class="mtag">Principal</span>` : ""}
-        <div class="mact">${m.type === "img" && i ? `<button type="button" data-a="main" title="Hacer principal" aria-label="Hacer principal">${ic("star", 15)}</button>` : ""}
-          ${i ? `<button type="button" data-a="l" title="Mover antes" aria-label="Mover antes">${ic("chevronLeft", 15)}</button>` : ""}
-          ${i < media.length - 1 ? `<button type="button" data-a="r" title="Mover después" aria-label="Mover después">${ic("chevronRight", 15)}</button>` : ""}
-          <button type="button" data-a="x" class="del" title="Quitar" aria-label="Quitar">${ic("trash", 15)}</button></div></div>`).join("")
+        <div class="mact">${m.type === "img" && i ? `<button type="button" data-a="main" aria-label="Hacer principal">${ic("star", 15)}</button>` : ""}
+          ${i ? `<button type="button" data-a="l" aria-label="Mover antes">${ic("chevronLeft", 15)}</button>` : ""}
+          ${i < media.length - 1 ? `<button type="button" data-a="r" aria-label="Mover después">${ic("chevronRight", 15)}</button>` : ""}
+          <button type="button" data-a="x" class="del" aria-label="Quitar">${ic("trash", 15)}</button></div></div>`).join("")
         || `<div class="mempty">${ic("image", 26)}<span>Aún no hay fotos</span></div>`;
     };
     $("#mGrid").addEventListener("click", (e) => {

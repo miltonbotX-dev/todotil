@@ -9,7 +9,11 @@ document.addEventListener("DOMContentLoaded", () => {
     e && e.preventDefault();
     const err = $("#terr"); err.hidden = true;
     const code = $("#tcode").value.trim().toUpperCase(), last = $("#tlast").value.replace(/\D/g, "");
-    if (!/^TD-[A-Z0-9]{4,6}$/.test(code) || last.length !== 4) { err.textContent = "Revisa el código (TD-XXXXX) y los 4 dígitos."; err.hidden = false; return; }
+    UI.clearErrors($("#tf"));
+    const okC = /^TD-[A-Z0-9]{4,6}$/.test(code), okL = last.length === 4;
+    if (!okC) UI.fieldError("tcode", "Escribe tu código tal como te llegó (TD-XXXXX)");
+    if (!okL) UI.fieldError("tlast", "Escribe los últimos 4 dígitos de tu celular");
+    if (!okC || !okL) { (okC ? $("#tlast") : $("#tcode")).focus(); return; }
     $("#tbtn").disabled = true;
     try {
       const o = await api.track(code, last);

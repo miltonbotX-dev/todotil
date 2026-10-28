@@ -93,15 +93,25 @@ document.addEventListener("DOMContentLoaded", async () => {
     const err = $("#err"); err.hidden = true;
     const v = (id) => $("#" + id).value.trim();
     const phone = v("phone").replace(/\D/g, "").replace(/^51(?=9\d{8}$)/, "");
-    const fail = (m, id) => { err.textContent = m; err.hidden = false; if (id) $("#" + id).focus(); };
-    if (v("name").length < 2) return fail("Escribe tu nombre", "name");
-    if (v("surname").length < 2) return fail("Escribe tu apellido", "surname");
-    if (!/^9\d{8}$/.test(phone)) return fail("Tu celular debe tener 9 dígitos y empezar con 9", "phone");
-    if (!dept.value) return fail("Elige tu departamento", "dept");
-    if (!prov.value) return fail("Elige tu provincia", "prov");
-    if (!dist.value) return fail("Elige tu distrito", "dist");
-    if (v("addr").length < 5) return fail("Escribe tu dirección completa", "addr");
-    if (v("dni") && !/^\d{8}$/.test(v("dni"))) return fail("El DNI debe tener 8 dígitos", "dni");
+    const fail = (m) => { err.innerHTML = UI.icon("alert", 18) + `<span>${esc(m)}</span>`; err.hidden = false; };
+    UI.clearErrors(form);
+    const bad = [];
+    const chk = (cond, id, m) => { if (!cond) { UI.fieldError(id, m); bad.push(id); } };
+    chk(v("name").length >= 2, "name", "Escribe tu nombre");
+    chk(v("surname").length >= 2, "surname", "Escribe tu apellido");
+    chk(/^9\d{8}$/.test(phone), "phone", "Tu celular debe tener 9 dígitos y empezar con 9");
+    chk(!!dept.value, "dept", "Elige tu departamento");
+    chk(!!prov.value || !dept.value, "prov", "Elige tu provincia");
+    chk(!!dist.value || !prov.value, "dist", "Elige tu distrito");
+    chk(v("addr").length >= 5, "addr", "Escribe tu dirección completa (calle y número)");
+    chk(/^\d{8}$/.test(v("dni")), "dni", "Tu DNI debe tener 8 dígitos");
+    chk(!v("email") || /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v("email")), "email", "Revisa tu correo (o déjalo vacío)");
+    if (bad.length) {
+      fail(bad.length === 1 ? "Revisa el campo marcado en rojo" : `Revisa los ${bad.length} campos marcados en rojo`);
+      const first = $("#" + bad[0]); const t = (first._tp && first._tp.btn) || first;
+      t.scrollIntoView({ behavior: "smooth", block: "center" }); setTimeout(() => first.focus({ preventScroll: true }), 250);
+      return;
+    }
     const pk = (Q && Q.packages) || [];
     if (pk.length > 1) {
       const ok = await UI.confirm(`Tus productos salen de ${pk.length} almacenes distintos, así que llegarán en ${pk.length} paquetes separados, cada uno con su envío${Number(Q.shipping) > 0 ? ` (total envío ${money(Q.shipping)})` : " (se confirma por WhatsApp)"}.`, { title: "Tu pedido llega por partes", ok: "Entendido, confirmar", cancel: "Revisar" });

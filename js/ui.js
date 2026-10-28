@@ -47,6 +47,7 @@
     upload: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/>',
     play: '<path d="m6 3 14 9-14 9V3z"/>',
     arrowLeft: '<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>',
+    chevronDown: '<path d="m6 9 6 6 6-6"/>',
     help: '<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>',
   };
   function icon(name, size = 18, cls = "") {
@@ -107,6 +108,149 @@
     setTimeout(() => { t.classList.remove("on"); setTimeout(() => t.remove(), 250); }, tone === "error" ? 4200 : 2200);
   }
 
-  window.UI = { icon, hydrate, modal, alert: alertBox, confirm: confirmBox, toast, esc };
-  document.addEventListener("DOMContentLoaded", () => hydrate());
+
+  // ---------- Selector propio (reemplaza la lista nativa de <select>) ----------
+  // El <select> original queda oculto como fuente de verdad: .value, onchange y lo que se envía no cambian.
+  const norm = (t) => String(t || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+  const NATIVE = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "value");
+  const NATIVE_IDX = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "selectedIndex");
+  const isSheet = () => matchMedia("(max-width: 640px), (pointer: coarse)").matches;
+  let uid = 0;
+  function enhanceSelect(sel) {
+    if (sel._tp || sel.multiple) return;
+    const id = sel.id || "tps" + ++uid;
+    const btn = document.createElement("button");
+    btn.type = "button"; btn.className = "tp-btn";
+    btn.setAttribute("role", "combobox"); btn.setAttribute("aria-haspopup", "listbox"); btn.setAttribute("aria-expanded", "false");
+    btn.id = id + "__tp";
+    const pv = sel.previousElementSibling;
+    const lab = (sel.id && document.querySelector(`label[for="${CSS.escape(sel.id)}"]`)) || (pv && pv.tagName === "LABEL" && !pv.htmlFor ? pv : null);
+    if (lab) { if (!lab.id) lab.id = id + "__lab"; btn.setAttribute("aria-labelledby", lab.id + " " + btn.id); lab.addEventListener("click", (e) => { e.preventDefault(); btn.focus(); }); }
+    else if (sel.getAttribute("aria-label")) btn.setAttribute("aria-label", sel.getAttribute("aria-label"));
+    btn.innerHTML = `<span class="tp-txt"></span>${icon("chevronDown", 18, "tp-chev")}`;
+    sel.classList.add("tp-native"); sel.tabIndex = -1; sel.setAttribute("aria-hidden", "true");
+    sel.after(btn);
+    const sync = () => {
+      const o = sel.options[sel.selectedIndex];
+      btn.querySelector(".tp-txt").textContent = o ? o.text : "";
+      btn.classList.toggle("tp-ph", !o || o.value === "");
+      btn.disabled = sel.disabled;
+      if (sel.value) clearFieldError(sel);
+    };
+    Object.defineProperty(sel, "value", { configurable: true, get() { return NATIVE.get.call(this); }, set(v) { NATIVE.set.call(this, v); sync(); } });
+    Object.defineProperty(sel, "selectedIndex", { configurable: true, get() { return NATIVE_IDX.get.call(this); }, set(v) { NATIVE_IDX.set.call(this, v); sync(); } });
+    sel.focus = () => btn.focus();
+    new MutationObserver(sync).observe(sel, { childList: true, subtree: true, attributes: true, attributeFilter: ["disabled"] });
+    sel.addEventListener("change", sync);
+    btn.addEventListener("click", () => openPicker(sel, btn));
+    btn.addEventListener("keydown", (e) => {
+      if (["ArrowDown", "ArrowUp", "Enter", " ", "F4"].includes(e.key) || (e.altKey && e.key === "ArrowDown")) { e.preventDefault(); openPicker(sel, btn); }
+    });
+    sel._tp = { btn, sync }; sync();
+  }
+  function openPicker(sel, btn) {
+    if (sel.disabled || btn.getAttribute("aria-expanded") === "true") return;
+    const all = [...sel.options].map((o, i) => ({ i, text: o.text, value: o.value, n: norm(o.text), ph: o.value === "" && i === 0 && sel.required, dis: o.disabled }));
+    const opts = all.filter((o) => !o.ph);
+    const sheet = isSheet(), search = opts.length > 8;
+    const lab = btn.getAttribute("aria-labelledby") ? document.getElementById(btn.getAttribute("aria-labelledby").split(" ")[0]) : null;
+    const title = (lab ? lab.childNodes[0].textContent : "") || btn.getAttribute("aria-label") || "Elige una opción";
+    const dl = document.createElement("dialog");
+    dl.className = "tp " + (sheet ? "tp-sheet" : "tp-drop");
+    const lid = "tpl" + ++uid;
+    dl.innerHTML = `<div class="tp-card" role="presentation">
+      ${sheet ? `<div class="tp-grab"></div><div class="tp-head"><b>${esc(title.trim())}</b><button type="button" class="tp-x" aria-label="Cerrar">${icon("x", 20)}</button></div>` : ""}
+      ${search ? `<div class="tp-search">${icon("search", 18)}<input type="text" inputmode="search" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Buscar…" aria-label="Buscar" aria-controls="${lid}" aria-autocomplete="list"></div>` : ""}
+      <ul class="tp-list" role="listbox" id="${lid}" aria-label="${esc(title.trim())}"></ul></div>`;
+    const ul = dl.querySelector(".tp-list"), q = dl.querySelector(".tp-search input");
+    let shown = opts, act = Math.max(0, opts.findIndex((o) => o.i === sel.selectedIndex));
+    const draw = () => {
+      ul.innerHTML = shown.length ? shown.map((o, k) => `<li role="option" id="${lid}-${k}" data-k="${k}" aria-selected="${o.i === sel.selectedIndex}" class="${k === act ? "act" : ""}${o.dis ? " dis" : ""}" ${o.dis ? 'aria-disabled="true"' : ""}><span>${esc(o.text)}</span>${o.i === sel.selectedIndex ? icon("check", 18, "tp-ok") : ""}</li>`).join("")
+        : `<li class="tp-empty" role="presentation">${icon("search", 18)} Sin resultados</li>`;
+      const a = ul.querySelector("li.act");
+      (q || ul).setAttribute("aria-activedescendant", a ? a.id : "");
+      if (a) a.scrollIntoView({ block: "nearest" });
+    };
+    const filter = () => { const t = norm(q.value); shown = t ? opts.filter((o) => o.n.includes(t)) : opts; act = 0; draw(); };
+    const place = () => {
+      if (sheet) return;
+      const r = btn.getBoundingClientRect(), vh = innerHeight, vw = innerWidth, gap = 6, below = vh - r.bottom - gap - 8, above = r.top - gap - 8;
+      const up = below < 220 && above > below, h = Math.min(340, Math.max(140, up ? above : below));
+      const w = Math.min(Math.max(r.width, 220), vw - 16), left = Math.min(Math.max(8, r.left), vw - w - 8);
+      Object.assign(dl.style, { left: left + "px", width: w + "px", maxHeight: h + "px", top: up ? "auto" : r.bottom + gap + "px", bottom: up ? vh - r.top + gap + "px" : "auto" });
+    };
+    let closed = false;
+    const close = (focus = true) => {
+      if (closed) return; closed = true; btn.setAttribute("aria-expanded", "false");
+      removeEventListener("resize", place); removeEventListener("scroll", onScroll, true);
+      dl.classList.remove("on"); setTimeout(() => { if (dl.open) dl.close(); dl.remove(); }, sheet ? 200 : 90);
+      if (focus) btn.focus({ preventScroll: true });
+    };
+    const pick = (o) => {
+      if (!o || o.dis) return;
+      if (o.i !== sel.selectedIndex) { sel.selectedIndex = o.i; sel.dispatchEvent(new Event("input", { bubbles: true })); sel.dispatchEvent(new Event("change", { bubbles: true })); }
+      close();
+    };
+    const onScroll = (e) => { if (!dl.contains(e.target)) place(); };
+    ul.addEventListener("click", (e) => { const li = e.target.closest("li[data-k]"); if (li) pick(shown[+li.dataset.k]); });
+    dl.addEventListener("click", (e) => { if (e.target === dl || e.target.closest(".tp-x")) close(); });
+    dl.addEventListener("cancel", (e) => { e.preventDefault(); close(); });
+    dl.addEventListener("keydown", (e) => {
+      const n = shown.length;
+      if (e.key === "ArrowDown") { e.preventDefault(); act = Math.min(n - 1, act + 1); draw(); }
+      else if (e.key === "ArrowUp") { e.preventDefault(); act = Math.max(0, act - 1); draw(); }
+      else if (e.key === "Home" && !q) { e.preventDefault(); act = 0; draw(); }
+      else if (e.key === "End" && !q) { e.preventDefault(); act = n - 1; draw(); }
+      else if (e.key === "PageDown") { e.preventDefault(); act = Math.min(n - 1, act + 8); draw(); }
+      else if (e.key === "PageUp") { e.preventDefault(); act = Math.max(0, act - 8); draw(); }
+      else if (e.key === "Enter" || (e.key === " " && !q)) { e.preventDefault(); pick(shown[act]); }
+      else if (e.key === "Escape") { e.preventDefault(); close(); }
+      else if (e.key === "Tab") { e.preventDefault(); close(); }
+      else if (!q && e.key.length === 1 && !e.ctrlKey && !e.metaKey) { // búsqueda por tecla
+        const t = norm(e.key), k = shown.findIndex((o, j) => j > act && o.n.startsWith(t)), k2 = k < 0 ? shown.findIndex((o) => o.n.startsWith(t)) : k;
+        if (k2 >= 0) { act = k2; draw(); }
+      }
+    });
+    if (q) q.addEventListener("input", filter);
+    const host = sel.closest("dialog[open]") || document.body; host.appendChild(dl);
+    btn.setAttribute("aria-expanded", "true"); btn.setAttribute("aria-controls", lid);
+    if (dl.showModal) dl.showModal(); else dl.setAttribute("open", "");
+    place(); draw();
+    addEventListener("resize", place); addEventListener("scroll", onScroll, true);
+    requestAnimationFrame(() => { dl.classList.add("on"); if (q && !sheet) q.focus(); else ul.tabIndex = -1, ul.focus({ preventScroll: true }); });
+  }
+  function enhanceAll(root = document) { root.querySelectorAll("select").forEach(enhanceSelect); }
+
+  // ---------- Errores en línea (sin burbujas del navegador) ----------
+  function fieldError(el, msg) {
+    if (typeof el === "string") el = document.getElementById(el);
+    if (!el) return;
+    const tgt = (el._tp && el._tp.btn) || el;
+    clearFieldError(el);
+    tgt.classList.add("is-bad"); tgt.setAttribute("aria-invalid", "true");
+    const m = document.createElement("div"); m.className = "ferr"; m.id = (el.id || "f" + ++uid) + "__err"; m.setAttribute("role", "alert");
+    m.innerHTML = icon("alert", 15) + `<span>${esc(msg)}</span>`;
+    tgt.after(m); tgt.setAttribute("aria-describedby", m.id);
+    const off = () => clearFieldError(el); el.addEventListener("input", off, { once: true }); el.addEventListener("change", off, { once: true });
+  }
+  function clearFieldError(el) {
+    if (typeof el === "string") el = document.getElementById(el);
+    if (!el) return;
+    const tgt = (el._tp && el._tp.btn) || el;
+    tgt.classList.remove("is-bad"); tgt.removeAttribute("aria-invalid");
+    const m = document.getElementById((el.id || "") + "__err"); if (m) m.remove();
+    if (tgt.getAttribute("aria-describedby") === (el.id || "") + "__err") tgt.removeAttribute("aria-describedby");
+  }
+  function clearErrors(root = document) { root.querySelectorAll(".ferr").forEach((m) => m.remove()); root.querySelectorAll(".is-bad").forEach((x) => { x.classList.remove("is-bad"); x.removeAttribute("aria-invalid"); }); }
+
+  window.UI = { icon, hydrate, modal, alert: alertBox, confirm: confirmBox, toast, esc, enhanceSelect, enhanceAll, fieldError, clearFieldError, clearErrors };
+  document.addEventListener("DOMContentLoaded", () => {
+    hydrate();
+    // Ningún formulario usa las burbujas de validación del navegador
+    document.querySelectorAll("form").forEach((f) => (f.noValidate = true));
+    enhanceAll();
+    // Selects que se dibujan después (panel, ventanas)
+    new MutationObserver((ms) => { for (const m of ms) for (const n of m.addedNodes) if (n.nodeType === 1) { if (n.tagName === "SELECT") enhanceSelect(n); else if (n.querySelector) enhanceAll(n); } })
+      .observe(document.body, { childList: true, subtree: true });
+  });
 })();

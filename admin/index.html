@@ -18,9 +18,9 @@
 </head>
 <body>
 <header class="top"><div class="wrap"><a class="brand" href="./"><img src="../img/icon.svg" alt=""><span>Todo<b>til</b></span> <small style="color:var(--muted);font-size:13px;font-weight:700">Panel</small></a>
-  <nav><button class="icon-btn" id="notifBtn" hidden title="Activar avisos" aria-label="Activar avisos"><i data-ic="bell"></i></button><button class="icon-btn" id="outBtn" hidden><i data-ic="logout"></i><span class="hide-s">Salir</span></button></nav></div></header>
+  <nav><button class="icon-btn" id="notifBtn" hidden aria-label="Activar avisos"><i data-ic="bell"></i></button><button class="icon-btn" id="outBtn" hidden><i data-ic="logout"></i><span class="hide-s">Salir</span></button></nav></div></header>
 <main class="wrap" style="padding:14px 16px 60px">
-  <section id="login" hidden><form id="lf" class="panel" style="max-width:420px;margin:30px auto">
+  <section id="login" hidden><form id="lf" novalidate class="panel" style="max-width:420px;margin:30px auto">
     <h1 style="margin:0 0 6px;font-size:22px">Ingresar al panel</h1>
     <label for="le">Correo</label><input id="le" type="email" autocomplete="username" required>
     <label for="lp">Contraseña</label><input id="lp" type="password" autocomplete="current-password" required>
@@ -28,7 +28,7 @@
     <div style="margin-top:14px"><button class="btn btn-blue" id="lbtn">Ingresar</button></div>
     <p style="text-align:center;margin:12px 0 0"><a href="#" id="forgot">Olvidé mi contraseña</a></p>
   </form></section>
-  <section id="setpw" hidden><form id="pf" class="panel" style="max-width:420px;margin:30px auto">
+  <section id="setpw" hidden><form id="pf" novalidate class="panel" style="max-width:420px;margin:30px auto">
     <h1 style="margin:0 0 6px;font-size:22px">Crea tu contraseña</h1>
     <p style="margin:0;color:var(--muted)">Cuenta: <b id="pwEmail"></b></p>
     <input type="email" autocomplete="username" hidden>
