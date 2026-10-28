@@ -127,12 +127,12 @@
         <span>Dirección</span><div>${esc(o.address)}<br>${esc(o.district)}${o.province ? ", " + esc(o.province) : ""}, ${esc(o.department)}</div>
         ${o.reference ? `<span>Referencia</span><div>${esc(o.reference)}</div>` : ""}${o.notes ? `<span>Notas</span><div>${esc(o.notes)}</div>` : ""}
         <span>Productos</span><div>${(o.items || []).map((i) => `${i.qty}× ${esc(i.name)} · ${money(i.line_total)} <small style="color:var(--muted)">(Dropi ${esc(i.dropi_product_id || "—")})</small>${i.components ? `<br><small style="color:var(--muted)">Combo: ${i.components.map((c) => c.qty + "× " + esc(c.name)).join(", ")}</small>` : ""}`).join("<br>")}</div>
-        <span>Envío</span><div>${money(o.shipping)}</div><span>Total</span><b>${money(o.total)} (contra entrega)</b>
+        <span>Envío</span><div>${Number(o.shipping) > 0 ? money(o.shipping) : "Por confirmar (WhatsApp)"}</div><span>Total</span><b>${money(o.total)}${Number(o.shipping) > 0 ? "" : " + envío"} (contra entrega)</b>
         <span>Creado</span><div>${fmt(o.created_at)}</div>
       </div>
       ${pk.length ? `<h3 style="margin:8px 0 4px;display:flex;gap:6px;align-items:center">${ic("package")} ${pk.length > 1 ? pk.length + " paquetes (uno por proveedor)" : "1 paquete"}</h3>
         ${pk.map((p) => `<div class="pk"><b>Paquete ${p.n} · ${esc(p.supplier_name || "Sin proveedor")}</b>${p.warehouse ? ` <small>(${esc(p.warehouse)})</small>` : ""}<br>
-          <small>${(p.slugs || []).map((x) => esc(iname(x))).join(", ")} · ${p.units} und · envío ${money(p.shipping)}${p.carrier ? " · " + esc(p.carrier) : ""}${p.days ? " · " + esc(p.days) : ""} · ${p.source === "tabla" ? "tarifa de la tabla" : "tarifa general"}</small></div>`).join("")}` : ""}
+          <small>${(p.slugs || []).map((x) => esc(iname(x))).join(", ")} · ${p.units} und · envío ${p.source === "whatsapp" ? "por confirmar (WhatsApp)" : money(p.shipping)}${p.carrier ? " · " + esc(p.carrier) : ""}${p.days ? " · " + esc(p.days) : ""}${p.source === "tabla" ? " · tarifa de la tabla" : p.source === "whatsapp" ? "" : " · tarifa general"}</small></div>`).join("")}` : ""}
       <a class="btn btn-wa" href="${wa}" target="_blank" rel="noopener" style="min-height:44px;font-size:15px;margin-top:12px">${ic("message")} Escribir al cliente</a>
       <label>Nota para el cliente <small>(opcional, se ve en el seguimiento)</small></label><input id="evNote" maxlength="300">
       <div class="acts" style="margin-top:10px">
@@ -221,8 +221,15 @@
         <div id="ciList"></div><button type="button" class="btn btn-ghost sm" id="ciAdd" style="margin-top:8px">${ic("plus")} Agregar producto</button></div>
       <label>Descripción corta</label><input id="f_short_description" value="${esc(p.short_description || "")}" maxlength="200">
       <label>Descripción larga</label><textarea id="f_long_description" rows="5">${esc(p.long_description || "")}</textarea>
-      <label>Imágenes <small>(una URL por línea)</small></label><textarea id="f_images" rows="3">${esc((p.images || []).join("\n"))}</textarea>
-      ${f("video_url", "Video <small>(YouTube, TikTok o .mp4)</small>", "url")}
+      <label>Fotos y videos <small>(la primera foto es la principal)</small></label>
+      <div class="media" id="mediaBox"><div class="mgrid" id="mGrid"></div>
+        <label class="btn btn-blue sm mup" for="mFile">${ic("upload")} Subir fotos o videos</label>
+        <input type="file" id="mFile" accept="image/*,video/*" multiple hidden>
+        <div class="mprog" id="mProg" hidden><div class="mbar"><i id="mBar"></i></div><small id="mTxt"></small></div>
+        <div class="hint" style="margin:6px 0 0">Desde el celular: cámara o galería. Fotos se reducen a 1600 px. Videos hasta 50 MB.</div>
+        <details style="margin-top:6px"><summary class="hint" style="cursor:pointer">Agregar por URL</summary>
+          <div class="ci" style="grid-template-columns:1fr auto"><input id="mUrl" type="url" placeholder="https://…/foto.jpg o video.mp4"><button type="button" class="btn btn-ghost sm" id="mUrlAdd">${ic("plus")} Agregar</button></div></details></div>
+      ${f("video_url", "Video de YouTube o TikTok <small>(opcional)</small>", "url")}
       <div class="row2"><div>${f("stock_hint", "Stock referencial", "number")}</div><div>${f("sort", "Orden", "number")}</div></div>
       <label class="chk"><input type="checkbox" id="f_active" ${p.active ? "checked" : ""}> Publicado (visible en la tienda)</label>
       <label class="chk"><input type="checkbox" id="f_featured" ${p.featured ? "checked" : ""}> Destacado (“Lo más pedido”)</label>
@@ -249,6 +256,44 @@
     $("#ciList").addEventListener("change", (e) => { const i = Number(e.target.dataset.i); if (e.target.classList.contains("ciP")) items[i].product_id = e.target.value; if (e.target.classList.contains("ciQ")) items[i].qty = Math.max(1, Math.min(10, Number(e.target.value) || 1)); });
     $("#ciList").addEventListener("click", (e) => { const b = e.target.closest(".iconbtn"); if (b) { items.splice(Number(b.dataset.i), 1); drawCI(); } });
     supInfo(); marg(); syncCombo();
+    // ---- Fotos y videos ----
+    let media = [...(p.images || []).map((u) => ({ type: "img", url: u })), ...(p.videos || []).map(TDMedia.vidDec)], dropped = [], busy = 0;
+    const drawMedia = () => {
+      $("#mGrid").innerHTML = media.map((m, i) => `<div class="mitem${i === 0 && m.type === "img" ? " main" : ""}" data-i="${i}">
+        ${m.type === "img" ? `<img src="${esc(m.url)}" alt="">` : `<video src="${esc(m.url)}#t=0.5" ${m.poster ? `poster="${esc(m.poster)}"` : ""} muted playsinline preload="metadata"></video><span class="mplay">${ic("play", 14)}</span>`}
+        ${i === 0 && m.type === "img" ? `<span class="mtag">Principal</span>` : ""}
+        <div class="mact">${m.type === "img" && i ? `<button type="button" data-a="main" title="Hacer principal" aria-label="Hacer principal">${ic("star", 15)}</button>` : ""}
+          ${i ? `<button type="button" data-a="l" title="Mover antes" aria-label="Mover antes">${ic("chevronLeft", 15)}</button>` : ""}
+          ${i < media.length - 1 ? `<button type="button" data-a="r" title="Mover después" aria-label="Mover después">${ic("chevronRight", 15)}</button>` : ""}
+          <button type="button" data-a="x" class="del" title="Quitar" aria-label="Quitar">${ic("trash", 15)}</button></div></div>`).join("")
+        || `<div class="mempty">${ic("image", 26)}<span>Aún no hay fotos</span></div>`;
+    };
+    $("#mGrid").addEventListener("click", (e) => {
+      const b = e.target.closest("button[data-a]"); if (!b) return; const i = Number(b.closest(".mitem").dataset.i), a = b.dataset.a;
+      if (a === "main") media.unshift(media.splice(i, 1)[0]);
+      if (a === "l") [media[i - 1], media[i]] = [media[i], media[i - 1]];
+      if (a === "r") [media[i + 1], media[i]] = [media[i], media[i + 1]];
+      if (a === "x") { const [m] = media.splice(i, 1); dropped.push(m.url); if (m.poster) dropped.push(m.poster); }
+      drawMedia();
+    });
+    $("#mUrlAdd").onclick = () => { const u = $("#mUrl").value.trim(); if (!/^https?:\/\//.test(u)) return UI.alert("Pega un enlace que empiece con https://", { title: "URL no válida", tone: "warn" });
+      media.push(/\.(mp4|webm|mov)(\?|#|$)/i.test(u) ? { type: "vid", url: u } : { type: "img", url: u }); $("#mUrl").value = ""; drawMedia(); };
+    $("#mFile").onchange = async (e) => {
+      const files = [...e.target.files]; e.target.value = ""; if (!files.length) return;
+      const big = files.filter((x) => /^video\//.test(x.type) && x.size > TDMedia.MAX_VIDEO);
+      if (big.length) UI.alert(big.map((x) => `“${x.name}” pesa ${(x.size / 1048576).toFixed(1)} MB.`).join("\n") + "\nEl máximo por video es 50 MB. Recórtalo o grábalo en 720p y vuelve a intentarlo.", { title: "Video demasiado pesado", tone: "error" });
+      const ok = files.filter((x) => !big.includes(x)); if (!ok.length) return;
+      busy++; $("#pSave").disabled = true; $("#mProg").hidden = false; const errs = [];
+      const folder = "products/" + (p.id || "nuevo");
+      for (let k = 0; k < ok.length; k++) {
+        const set = (f) => { $("#mBar").style.width = Math.round(((k + f) / ok.length) * 100) + "%"; $("#mTxt").textContent = `Subiendo ${k + 1} de ${ok.length}… ${Math.round(f * 100)}%`; };
+        set(0);
+        try { const m = await TDMedia.upload(sb, ok[k], folder, set); media.push(m); drawMedia(); } catch (ex) { errs.push(ex.message); }
+      }
+      busy--; $("#mProg").hidden = true; $("#pSave").disabled = false;
+      if (errs.length) UI.alert(errs.join("\n"), { title: "Algunos archivos no se subieron", tone: "error" }); else UI.toast(ok.length === 1 ? "Archivo subido" : ok.length + " archivos subidos");
+    };
+    drawMedia();
     $("#pClose").onclick = () => dlg.close();
     const num = (id) => { const v = $("#" + id).value; return v === "" ? null : Number(v); };
     $("#pSave").onclick = async () => {
@@ -259,10 +304,11 @@
         supplier_id: sup(), is_combo: isCombo,
         dropi_product_id: num("f_dropi_product_id"), dropi_variation_id: num("f_dropi_variation_id"), category: $("#f_category").value || null,
         short_description: $("#f_short_description").value.trim() || null, long_description: $("#f_long_description").value.trim() || null,
-        images: $("#f_images").value.split("\n").map((s) => s.trim()).filter(Boolean), video_url: $("#f_video_url").value.trim() || null,
+        images: media.filter((m) => m.type === "img").map((m) => m.url), videos: media.filter((m) => m.type === "vid").map(TDMedia.vidEnc), video_url: $("#f_video_url").value.trim() || null,
         stock_hint: num("f_stock_hint"), sort: num("f_sort") ?? 0, active: $("#f_active").checked, featured: $("#f_featured").checked,
       };
       const err = (m) => { $("#perr").textContent = m; $("#perr").hidden = false; };
+      if (busy) return err("Espera a que terminen de subir los archivos");
       if (!name || !row.price) return err("Nombre y precio son obligatorios");
       if (row.compare_at_price != null && row.compare_at_price <= row.price) return err("El precio 'Antes' debe ser mayor al precio actual (o déjalo vacío)");
       if (isCombo && !row.supplier_id) return err("Un combo necesita proveedor");
@@ -276,6 +322,7 @@
       const { data, error } = await q;
       if (error) { $("#pSave").disabled = false; return err(error.message); }
       if (isCombo) { const r1 = await sb.rpc("admin_set_combo_items", { p_combo: data.id, p_items: items }); if (r1.error) { $("#pSave").disabled = false; return err(r1.error.message); } }
+      if (dropped.length) TDMedia.remove(sb, dropped);
       dlg.close(); UI.toast("Producto guardado"); loadProducts();
     };
     if (p.id) $("#pDel").onclick = async () => {
@@ -294,7 +341,7 @@
   }
   function drawSuppliers() {
     $("#slist").innerHTML = suppliers.map((s) => { const n = products.filter((p) => p.supplier_id === s.id).length; return `<div class="srow" data-id="${s.id}">
-      <b>${esc(s.name)}</b>${vBadge(s)}
+      <b style="display:flex;gap:8px;align-items:center">${s.image_url ? `<img class="slogo" src="${esc(s.image_url)}" alt="">` : ""}${esc(s.name)}</b>${vBadge(s)}
       <div class="meta">${s.dropi_supplier_id ? `<span>${ic("tag", 13)} Dropi #${esc(s.dropi_supplier_id)}</span>` : ""}${s.warehouse_city ? `<span>${ic("map", 13)} ${esc(s.warehouse_city)}</span>` : ""}${s.dispatch_time ? `<span>${ic("clock", 13)} ${esc(s.dispatch_time)}</span>` : ""}<span>${ic("box", 13)} ${n} producto${n === 1 ? "" : "s"}</span>${s.active ? "" : "<span>Inactivo</span>"}</div>
       ${s.notes ? `<small style="grid-column:1/-1">${esc(s.notes)}</small>` : ""}</div>`; }).join("") || `<div class="panel empty">${ic("store", 32)}<br>Aún no hay proveedores.</div>`;
   }
@@ -304,6 +351,8 @@
     const f = (k, l, t = "text", extra = "") => `<label>${l}</label><input id="s_${k}" type="${t}" value="${esc(s[k] ?? "")}" ${extra}>`;
     openDlg(`<h2 style="margin:0 0 6px">${s.id ? "Editar proveedor" : "Nuevo proveedor"}</h2>
       ${f("name", "Nombre", "text", "maxlength=80")}
+      <label>Foto / logo <small>(opcional)</small></label><div class="sImg"><img id="sImgV" src="${esc(s.image_url || "../img/icon-192.png")}" alt="">
+        <label class="btn btn-ghost sm" for="sImgF">${ic("upload")} Subir foto</label><input type="file" id="sImgF" accept="image/*" hidden><small id="sImgT"></small></div>
       <div class="row2"><div>${f("dropi_supplier_id", "ID proveedor Dropi", "number")}</div><div>${f("dropi_name", "Nombre en Dropi")}</div></div>
       <div class="row2"><div>${f("warehouse_city", "Bodega / ciudad")}</div><div>${f("dispatch_time", "Tiempo de despacho", "text", 'placeholder="ej. 9 h"')}</div></div>
       <label class="chk"><input type="checkbox" id="s_verified" ${s.verified ? "checked" : ""}> Verificado en Dropi</label>
@@ -312,11 +361,17 @@
       <div id="serr" class="err" hidden></div>
       <div class="acts" style="margin-top:14px"><button class="btn btn-main" id="sSave">${ic("check")} Guardar</button><button class="btn btn-ghost" id="sClose">Cerrar</button>
       ${s.id ? `<button class="btn btn-red" id="sDel" style="grid-column:1/-1">${ic("trash")} Eliminar proveedor</button>` : ""}</div>`);
+    let sImg = s.image_url || null;
+    $("#sImgF").onchange = async (e) => { const fl = e.target.files[0]; e.target.value = ""; if (!fl) return;
+      $("#sSave").disabled = true; $("#sImgT").textContent = "Subiendo…";
+      try { const m = await TDMedia.upload(sb, fl, "suppliers", (x) => ($("#sImgT").textContent = "Subiendo… " + Math.round(x * 100) + "%")); sImg = m.url; $("#sImgV").src = m.url; $("#sImgT").textContent = "Lista"; }
+      catch (ex) { $("#sImgT").textContent = ""; fail(ex); }
+      $("#sSave").disabled = false; };
     $("#sClose").onclick = () => dlg.close();
     $("#sSave").onclick = async () => {
       const v = (k) => $("#s_" + k).value.trim() || null;
       const row = { name: v("name"), dropi_supplier_id: v("dropi_supplier_id") ? Number(v("dropi_supplier_id")) : null, dropi_name: v("dropi_name"),
-        warehouse_city: v("warehouse_city"), dispatch_time: v("dispatch_time"), notes: v("notes"), verified: $("#s_verified").checked, active: $("#s_active").checked };
+        warehouse_city: v("warehouse_city"), dispatch_time: v("dispatch_time"), notes: v("notes"), image_url: sImg, verified: $("#s_verified").checked, active: $("#s_active").checked };
       const err = (m) => { $("#serr").textContent = m; $("#serr").hidden = false; };
       if (!row.name || row.name.length < 2) return err("Escribe el nombre del proveedor");
       const { error } = s.id ? await sb.from("suppliers").update(row).eq("id", s.id) : await sb.from("suppliers").insert(row);
@@ -400,9 +455,10 @@
     const box = $("#t-settings");
     box.innerHTML = `<div class="panel" style="margin-top:10px">
       <label>WhatsApp de la tienda <small>(con 51, ej. 51987654321; vacío = se ocultan los botones)</small></label><input id="s_whatsapp" inputmode="numeric" value="${esc(s.whatsapp || "")}">
-      <div class="row2"><div><label>Envío general Lima/Callao S/</label><input id="s_fl" type="number" step="0.5" value="${s.shipping_fee_lima}"></div>
+      <div class="note" style="margin-top:10px">${ic("info", 18)}<span>Envío: <b>se confirma por WhatsApp</b> antes del despacho. El total del pedido solo incluye los productos.</span></div>
+      <div hidden><div class="row2"><div><label>Envío general Lima/Callao S/</label><input id="s_fl" type="number" step="0.5" value="${s.shipping_fee_lima}"></div>
       <div><label>Envío general provincias S/</label><input id="s_fp" type="number" step="0.5" value="${s.shipping_fee_provincia}"></div></div>
-      <p class="hint" style="margin:6px 0 0">Se usa cuando no hay una tarifa en la pestaña Envíos. Se cobra por paquete (proveedor).</p>
+      <p class="hint" style="margin:6px 0 0">Se usa cuando no hay una tarifa en la pestaña Envíos. Se cobra por paquete (proveedor).</p></div>
       <label>Texto de envío</label><textarea id="s_ship" rows="2">${esc(s.shipping_text || "")}</textarea>
       <label>Medios de pago</label><textarea id="s_pay" rows="2">${esc(s.payment_text || "")}</textarea>
       <label>Garantía</label><textarea id="s_war" rows="5">${esc(s.warranty_text || "")}</textarea>

@@ -18,7 +18,7 @@
     return data;
   }
 
-  const PCOLS = "id,slug,name,short_description,long_description,price,compare_at_price,images,video_url,category,featured,stock_hint,sort,supplier_id,is_combo";
+  const PCOLS = "id,slug,name,short_description,long_description,price,compare_at_price,images,videos,video_url,category,featured,stock_hint,sort,supplier_id,is_combo";
   const api = {
     products: () => rest("products?select=" + PCOLS + "&active=eq.true&order=sort.asc,name.asc"),
     product: (slug) => rest("products?select=" + PCOLS + "&active=eq.true&slug=eq." + encodeURIComponent(slug)).then((a) => a[0] || null),
@@ -59,7 +59,7 @@
     const img = (p.images || [])[0] || "img/icon-512.png";
     return `<a class="card" href="producto.html?p=${encodeURIComponent(p.slug)}">
       <div class="ph"><img loading="lazy" src="${esc(img)}" alt="${esc(p.name)}"></div>
-      <div class="bd">${p.is_combo ? `<span class="tag" style="background:var(--blue-l);color:var(--blue-d)">${ic("layers", 13)} Combo</span>` : ""}${p.featured ? '<span class="tag">${ic("flame", 13)} Más pedido</span>' : ""}
+      <div class="bd">${p.is_combo ? `<span class="tag" style="background:var(--blue-l);color:var(--blue-d)">${ic("layers", 13)} Combo</span>` : ""}${p.featured ? `<span class="tag">${ic("flame", 13)} Más pedido</span>` : ""}
         <h3>${esc(p.name)}</h3>
         <div><span class="price">${money(p.price)}</span>${p.compare_at_price ? `<span class="was">Antes ${money(p.compare_at_price)}</span>` : ""}</div>
       </div></a>`;

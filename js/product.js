@@ -7,10 +7,16 @@ document.addEventListener("DOMContentLoaded", async () => {
   const s = await api.settings();
   document.title = p.name + " · Todotil";
   const imgs = p.images && p.images.length ? p.images : ["img/icon-512.png"];
+  const vids = (p.videos || []).map((v) => { const [url, poster] = String(v).split("|"); return { url, poster: poster || "" }; });
+  const gal = [...imgs.map((u) => ({ t: "img", u })), ...vids.map((v) => ({ t: "vid", u: v.url, poster: v.poster }))];
+  const mainHTML = (g) => g.t === "vid"
+    ? `<video id="mainVid" src="${esc(g.u)}${g.poster ? "" : "#t=0.5"}" ${g.poster ? `poster="${esc(g.poster)}"` : ""} controls playsinline preload="metadata"></video>`
+    : `<img id="mainImg" src="${esc(g.u)}" alt="${esc(p.name)}">`;
   let qty = 1;
   box.innerHTML = `
-    <div><div class="gal-main"><img id="mainImg" src="${esc(imgs[0])}" alt="${esc(p.name)}"></div>
-      ${imgs.length > 1 ? `<div class="thumbs">${imgs.map((u, i) => `<img src="${esc(u)}" data-i="${i}" class="${i ? "" : "on"}" alt="">`).join("")}</div>` : ""}
+    <div><div class="gal-main" id="galMain">${mainHTML(gal[0])}</div>
+      ${gal.length > 1 ? `<div class="thumbs">${gal.map((g, i) => g.t === "img" ? `<img src="${esc(g.u)}" data-i="${i}" class="${i ? "" : "on"}" alt="">`
+        : `<button type="button" class="tvid" data-i="${i}" aria-label="Ver video">${g.poster ? `<img src="${esc(g.poster)}" alt="">` : `<video src="${esc(g.u)}#t=0.5" muted playsinline preload="metadata"></video>`}<span>${ic("play", 16)}</span></button>`).join("")}</div>` : ""}
     </div>
     <div class="stack">
       <div><h1>${esc(p.name)}</h1>
@@ -34,8 +40,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     </div>`;
   const wa = waLink(s, `Hola Todotil, quiero pedir: ${p.name} (${money(p.price)})`);
   if (wa) { const a = $("#wa"); a.href = wa; a.hidden = false; }
-  box.addEventListener("click", (e) => { const t = e.target.closest(".thumbs img"); if (!t) return;
-    $("#mainImg").src = imgs[t.dataset.i]; box.querySelectorAll(".thumbs img").forEach((x) => x.classList.toggle("on", x === t)); });
+  box.addEventListener("click", (e) => { const t = e.target.closest(".thumbs [data-i]"); if (!t) return;
+    $("#galMain").innerHTML = mainHTML(gal[t.dataset.i]); box.querySelectorAll(".thumbs [data-i]").forEach((x) => x.classList.toggle("on", x === t)); });
   $("#qm").onclick = () => { qty = Math.max(1, qty - 1); $("#qv").textContent = qty; };
   $("#qp").onclick = () => { qty = Math.min(10, qty + 1); $("#qv").textContent = qty; };
   $("#add").onclick = () => { cart.add(p, qty); toast("Agregado al carrito"); };

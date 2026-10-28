@@ -42,3 +42,19 @@ dialog::backdrop{background:rgba(15,23,42,.5)}
 .pk{border:1.5px solid var(--line);border-radius:10px;padding:8px 10px;margin-top:6px;font-size:14px}
 .btn .ic{flex:0 0 auto}
 .dh{display:flex;justify-content:space-between;align-items:center;gap:10px}
+/* Fotos y videos */
+.media{border:1.5px dashed var(--line);border-radius:12px;padding:10px;background:#fff}
+.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;margin-bottom:8px}
+.mitem{position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:var(--bg);border:2px solid transparent}
+.mitem.main{border-color:var(--blue)}
+.mitem img,.mitem video{width:100%;height:100%;object-fit:cover;display:block}
+.mplay{position:absolute;top:6px;left:6px;background:rgba(0,0,0,.6);color:#fff;border-radius:99px;width:24px;height:24px;display:grid;place-items:center}
+.mtag{position:absolute;top:6px;left:6px;background:var(--blue);color:#fff;font-size:11px;font-weight:800;padding:2px 6px;border-radius:6px}
+.mact{position:absolute;left:0;right:0;bottom:0;display:flex;gap:4px;justify-content:center;padding:4px;background:linear-gradient(transparent,rgba(0,0,0,.55))}
+.mact button{width:30px;height:30px;border:0;border-radius:8px;background:rgba(255,255,255,.92);display:grid;place-items:center;cursor:pointer;color:#111}
+.mact button.del{color:#b91c1c}
+.mempty{grid-column:1/-1;display:flex;gap:8px;align-items:center;justify-content:center;color:var(--muted);padding:18px}
+.mup{width:100%;cursor:pointer}
+.mprog{margin-top:8px}.mbar{height:10px;border-radius:99px;background:var(--bg);overflow:hidden}.mbar i{display:block;height:100%;width:0;background:var(--blue);transition:width .2s}
+.sImg{display:flex;gap:10px;align-items:center}.sImg img{width:56px;height:56px;border-radius:10px;object-fit:cover;background:var(--bg)}
+.slogo{width:28px;height:28px;border-radius:6px;object-fit:cover}

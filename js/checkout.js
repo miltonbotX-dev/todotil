@@ -51,20 +51,22 @@ document.addEventListener("DOMContentLoaded", async () => {
     const pk = (Q && Q.packages) || [];
     const name = (slug) => (items.find((i) => i.slug === slug) || {}).name || slug;
     const haveDest = !!dist.value;
-    const shipTxt = !Q ? "…" : haveDest ? money(Q.shipping) : "Elige tu distrito";
+    const waShip = !Q || (Q.packages || []).some((x) => x.source === "whatsapp");
+    const shipTxt = waShip ? "Se confirma por WhatsApp" : !Q ? "…" : haveDest ? money(Q.shipping) : "Elige tu distrito";
+    const waUrl = TD.waLink(s, `Hola Todotil, quiero consultar el envío a ${[dist.value, prov.value, dept.value].filter(Boolean).join(", ") || "mi distrito"} para: ${items.map((i) => i.qty + " × " + i.name).join(", ")}`);
     $("#cartBox").innerHTML = `<div class="panel">${items.map((i) => `
       <div class="line"><img src="${esc(i.image || "img/icon-192.png")}" alt="">
         <div><h4>${esc(i.name)}</h4><div class="qty"><button type="button" data-a="m" data-s="${esc(i.slug)}" aria-label="Menos">${ic("minus", 16)}</button><span>${i.qty}</span><button type="button" data-a="p" data-s="${esc(i.slug)}" aria-label="Más">${ic("plus", 16)}</button></div>
           <div><button class="rm" type="button" data-a="r" data-s="${esc(i.slug)}">${ic("trash", 14)} Quitar</button></div></div>
         <b>${money(i.price * i.qty)}</b></div>`).join("")}
-      ${pk.length > 1 ? `<div class="warn" id="multiPkg">${ic("alert", 20)}<span>Tu pedido llegará en <b>${pk.length} paquetes separados</b>, porque los productos salen de almacenes distintos. Cada paquete tiene su propio costo de envío.</span></div>
+      ${pk.length > 1 ? `<div class="warn" id="multiPkg">${ic("alert", 20)}<span>Tu pedido llegará en <b>${pk.length} paquetes separados</b>, porque los productos salen de almacenes distintos. ${waShip ? "El envío de cada paquete se confirma por WhatsApp." : "Cada paquete tiene su propio costo de envío."}</span></div>
         <div class="pkgs">${pk.map((p) => `<div class="pkg"><b>${ic("package", 16)} Paquete ${p.n}</b>
           <div style="color:var(--muted)">${p.slugs.map((x) => esc(name(x))).join(" · ")}</div>
-          <div class="sum"><span>Envío${p.days ? " · " + esc(p.days) : ""}</span><b>${haveDest ? money(p.shipping) : "—"}</b></div></div>`).join("")}</div>` : ""}
+          <div class="sum"><span>Envío${p.days ? " · " + esc(p.days) : ""}</span><b>${waShip ? "Por WhatsApp" : haveDest ? money(p.shipping) : "—"}</b></div></div>`).join("")}</div>` : ""}
       <div style="padding-top:8px"><div class="sum"><span>Subtotal</span><b>${money(Q ? Q.subtotal : sub)}</b></div>
       <div class="sum"><span>Envío${pk.length > 1 ? ` (${pk.length} paquetes)` : ""}</span><b id="shipAmt">${shipTxt}</b></div>
-      <div class="sum total"><span>Total a pagar al recibir</span><span>${money(Q && haveDest ? Q.total : sub)}</span></div>
-      ${haveDest ? "" : '<div style="font-size:13px;color:var(--muted)">El costo de envío se calcula según tu distrito.</div>'}</div></div>`;
+      <div class="sum total"><span>${waShip ? "Total productos" : "Total a pagar al recibir"}</span><span>${money(Q && (haveDest || waShip) ? Q.total : sub)}</span></div>
+      ${waShip ? `<div class="note" id="shipNote" style="margin-top:8px">${ic("info", 18)}<span>El costo de envío no está incluido: <b>te lo confirmamos por WhatsApp antes del despacho</b>, según tu distrito.</span></div>${waUrl ? `<a class="btn btn-wa" id="waShip" style="margin-top:8px" target="_blank" rel="noopener" href="${esc(waUrl)}">${ic("message", 20)} Consultar envío por WhatsApp</a>` : ""}` : haveDest ? "" : '<div style="font-size:13px;color:var(--muted)">El costo de envío se calcula según tu distrito.</div>'}</div></div>`;
     form.hidden = false;
   }
   $("#cartBox").addEventListener("click", (e) => {
@@ -102,7 +104,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (v("dni") && !/^\d{8}$/.test(v("dni"))) return fail("El DNI debe tener 8 dígitos", "dni");
     const pk = (Q && Q.packages) || [];
     if (pk.length > 1) {
-      const ok = await UI.confirm(`Tus productos salen de ${pk.length} almacenes distintos, así que llegarán en ${pk.length} paquetes separados, cada uno con su envío (total envío ${money(Q.shipping)}).`, { title: "Tu pedido llega por partes", ok: "Entendido, confirmar", cancel: "Revisar" });
+      const ok = await UI.confirm(`Tus productos salen de ${pk.length} almacenes distintos, así que llegarán en ${pk.length} paquetes separados, cada uno con su envío${Number(Q.shipping) > 0 ? ` (total envío ${money(Q.shipping)})` : " (se confirma por WhatsApp)"}.`, { title: "Tu pedido llega por partes", ok: "Entendido, confirmar", cancel: "Revisar" });
       if (!ok) return;
     }
     const btn = $("#send"); btn.disabled = true; btn.textContent = "Enviando…";
