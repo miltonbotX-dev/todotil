@@ -48,6 +48,11 @@
     play: '<path d="m6 3 14 9-14 9V3z"/>',
     arrowLeft: '<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>',
     chevronDown: '<path d="m6 9 6 6 6-6"/>',
+    pause: '<rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/>',
+    volume: '<path d="M11 4.7a.7.7 0 0 0-1.2-.5L6.4 7.6A1.4 1.4 0 0 1 5.4 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.4a1.4 1.4 0 0 1 1 .4l3.4 3.4a.7.7 0 0 0 1.2-.5z"/><path d="M16 9a5 5 0 0 1 0 6"/><path d="M19.4 18.4a9 9 0 0 0 0-12.8"/>',
+    volumeX: '<path d="M11 4.7a.7.7 0 0 0-1.2-.5L6.4 7.6A1.4 1.4 0 0 1 5.4 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.4a1.4 1.4 0 0 1 1 .4l3.4 3.4a.7.7 0 0 0 1.2-.5z"/><path d="m22 9-6 6"/><path d="m16 9 6 6"/>',
+    maximize: '<path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/>',
+    minimize: '<path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/>',
     help: '<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>',
   };
   function icon(name, size = 18, cls = "") {
@@ -243,14 +248,69 @@
   }
   function clearErrors(root = document) { root.querySelectorAll(".ferr").forEach((m) => m.remove()); root.querySelectorAll(".is-bad").forEach((x) => { x.classList.remove("is-bad"); x.removeAttribute("aria-invalid"); }); }
 
-  window.UI = { icon, hydrate, modal, alert: alertBox, confirm: confirmBox, toast, esc, enhanceSelect, enhanceAll, fieldError, clearFieldError, clearErrors };
+  // ===== Reproductor de video propio (sin controles nativos => sin menú "Descargar") =====
+  function player(src, poster = "", cls = "") {
+    return `<div class="tdv ${cls}" data-src="${esc(src)}"><video ${poster ? `poster="${esc(poster)}"` : ""} src="${esc(src)}${poster ? "" : "#t=0.5"}" playsinline webkit-playsinline preload="metadata" disablePictureInPicture disableRemotePlayback controlsList="nodownload noplaybackrate noremoteplayback" tabindex="-1"></video>
+      <div class="tdv-hit" aria-hidden="true"></div>
+      <button type="button" class="tdv-big" aria-label="Reproducir">${icon("play", 30)}</button>
+      <div class="tdv-bar">
+        <button type="button" class="tdv-pp" aria-label="Reproducir">${icon("play", 18)}</button>
+        <div class="tdv-prog" role="slider" aria-label="Progreso" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" tabindex="0"><i></i></div>
+        <span class="tdv-t">0:00</span>
+        <button type="button" class="tdv-mute" aria-label="Silenciar">${icon("volume", 18)}</button>
+        <button type="button" class="tdv-fs" aria-label="Pantalla completa">${icon("maximize", 18)}</button>
+      </div></div>`;
+  }
+  const fmt = (t) => { t = Math.max(0, Math.floor(t || 0)); return Math.floor(t / 60) + ":" + String(t % 60).padStart(2, "0"); };
+  function mountPlayer(el) {
+    if (el._tdv) return; el._tdv = true;
+    const v = el.querySelector("video"), q = (c) => el.querySelector(c);
+    v.controls = false; v.removeAttribute("controls");
+    const big = q(".tdv-big"), pp = q(".tdv-pp"), prog = q(".tdv-prog"), bar = prog.querySelector("i"), tt = q(".tdv-t"), mu = q(".tdv-mute"), fs = q(".tdv-fs");
+    let hideT;
+    const sync = () => {
+      const on = !v.paused && !v.ended;
+      el.classList.toggle("playing", on);
+      pp.innerHTML = icon(on ? "pause" : "play", 18); pp.setAttribute("aria-label", on ? "Pausar" : "Reproducir");
+      mu.innerHTML = icon(v.muted ? "volumeX" : "volume", 18); mu.setAttribute("aria-label", v.muted ? "Activar sonido" : "Silenciar");
+    };
+    const tick = () => { const d = v.duration || 0, p = d ? (v.currentTime / d) * 100 : 0; bar.style.width = p + "%"; prog.setAttribute("aria-valuenow", Math.round(p)); tt.textContent = fmt(v.currentTime) + (d ? " / " + fmt(d) : ""); };
+    const wake = () => { el.classList.add("ui"); clearTimeout(hideT); if (!v.paused) hideT = setTimeout(() => el.classList.remove("ui"), 2500); };
+    const toggle = () => { if (v.paused || v.ended) { const r = v.play(); if (r && r.catch) r.catch(() => {}); } else v.pause(); wake(); };
+    big.onclick = toggle; pp.onclick = toggle;
+    q(".tdv-hit").onclick = () => { if (el.classList.contains("playing") && !el.classList.contains("ui")) wake(); else toggle(); };
+    mu.onclick = () => { v.muted = !v.muted; sync(); wake(); };
+    const seek = (e) => { const r = prog.getBoundingClientRect(), x = ((e.touches ? e.touches[0].clientX : e.clientX) - r.left) / r.width; if (v.duration) v.currentTime = Math.min(1, Math.max(0, x)) * v.duration; tick(); wake(); };
+    prog.addEventListener("pointerdown", (e) => { seek(e); const mv = (ev) => seek(ev), up = () => { removeEventListener("pointermove", mv); removeEventListener("pointerup", up); }; addEventListener("pointermove", mv); addEventListener("pointerup", up); });
+    prog.addEventListener("keydown", (e) => { if (!v.duration) return; if (e.key === "ArrowRight") v.currentTime = Math.min(v.duration, v.currentTime + 5); if (e.key === "ArrowLeft") v.currentTime = Math.max(0, v.currentTime - 5); });
+    const isFs = () => (document.fullscreenElement || document.webkitFullscreenElement) === el || el.classList.contains("fsx");
+    const fsIcon = () => { const f = isFs(); fs.innerHTML = icon(f ? "minimize" : "maximize", 18); fs.setAttribute("aria-label", f ? "Salir de pantalla completa" : "Pantalla completa"); el.classList.toggle("is-fs", f); };
+    fs.onclick = () => {
+      if (isFs()) { if (el.classList.contains("fsx")) { el.classList.remove("fsx"); document.documentElement.classList.remove("tdv-lock"); } else (document.exitFullscreen || document.webkitExitFullscreen).call(document); }
+      else if (el.requestFullscreen) el.requestFullscreen().catch(() => { el.classList.add("fsx"); document.documentElement.classList.add("tdv-lock"); fsIcon(); });
+      else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+      else { el.classList.add("fsx"); document.documentElement.classList.add("tdv-lock"); } // iPhone: pantalla completa propia
+      fsIcon(); wake();
+    };
+    document.addEventListener("fullscreenchange", fsIcon); document.addEventListener("webkitfullscreenchange", fsIcon);
+    ["play", "pause", "ended", "volumechange"].forEach((n) => v.addEventListener(n, () => { sync(); wake(); }));
+    ["timeupdate", "loadedmetadata", "durationchange"].forEach((n) => v.addEventListener(n, tick));
+    el.addEventListener("contextmenu", (e) => e.preventDefault());
+    el.addEventListener("pointermove", wake);
+    sync(); tick(); el.classList.add("ui");
+  }
+  function mountPlayers(root = document) { root.querySelectorAll(".tdv").forEach(mountPlayer); }
+  // Ningún <video> del sitio muestra menú contextual (Guardar/Descargar video)
+  document.addEventListener("contextmenu", (e) => { if (e.target.closest && e.target.closest("video, .tdv, .gal-main, .thumbs")) e.preventDefault(); }, true);
+
+  window.UI = { player, mountPlayers, icon, hydrate, modal, alert: alertBox, confirm: confirmBox, toast, esc, enhanceSelect, enhanceAll, fieldError, clearFieldError, clearErrors };
   document.addEventListener("DOMContentLoaded", () => {
     hydrate();
     // Ningún formulario usa las burbujas de validación del navegador
     document.querySelectorAll("form").forEach((f) => (f.noValidate = true));
-    enhanceAll();
+    enhanceAll(); mountPlayers();
     // Selects que se dibujan después (panel, ventanas)
-    new MutationObserver((ms) => { for (const m of ms) for (const n of m.addedNodes) if (n.nodeType === 1) { if (n.tagName === "SELECT") enhanceSelect(n); else if (n.querySelector) enhanceAll(n); } })
+    new MutationObserver((ms) => { for (const m of ms) for (const n of m.addedNodes) if (n.nodeType === 1) { if (n.tagName === "SELECT") enhanceSelect(n); else if (n.querySelector) { enhanceAll(n); if (n.classList.contains("tdv")) mountPlayer(n); else mountPlayers(n); } } })
       .observe(document.body, { childList: true, subtree: true });
   });
 })();

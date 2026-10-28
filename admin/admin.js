@@ -264,7 +264,7 @@
     let media = [...(p.images || []).map((u) => ({ type: "img", url: u })), ...(p.videos || []).map(TDMedia.vidDec)], dropped = [], busy = 0;
     const drawMedia = () => {
       $("#mGrid").innerHTML = media.map((m, i) => `<div class="mitem${i === 0 && m.type === "img" ? " main" : ""}" data-i="${i}">
-        ${m.type === "img" ? `<img src="${esc(m.url)}" alt="">` : `<video src="${esc(m.url)}#t=0.5" ${m.poster ? `poster="${esc(m.poster)}"` : ""} muted playsinline preload="metadata"></video><span class="mplay">${ic("play", 14)}</span>`}
+        ${m.type === "img" ? `<img src="${esc(m.url)}" alt="">` : `<video src="${esc(m.url)}#t=0.5" ${m.poster ? `poster="${esc(m.poster)}"` : ""} muted playsinline preload="metadata" disablePictureInPicture disableRemotePlayback tabindex="-1" style="pointer-events:none"></video><span class="mplay">${ic("play", 14)}</span>`}
         ${i === 0 && m.type === "img" ? `<span class="mtag">Principal</span>` : ""}
         <div class="mact">${m.type === "img" && i ? `<button type="button" data-a="main" aria-label="Hacer principal">${ic("star", 15)}</button>` : ""}
           ${i ? `<button type="button" data-a="l" aria-label="Mover antes">${ic("chevronLeft", 15)}</button>` : ""}
