@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", async () => {
-  const { $, api, esc, money, cart, waLink, toast } = TD;
+  const { $, api, esc, money, cart, waLink, toast, ic } = TD;
   const slug = new URLSearchParams(location.search).get("p");
   const box = $("#pd");
   const p = slug ? await api.product(slug).catch(() => null) : null;
@@ -19,25 +19,34 @@ document.addEventListener("DOMContentLoaded", async () => {
       <div style="display:flex;align-items:center;gap:12px"><b>Cantidad</b>
         <div class="qty"><button type="button" id="qm" aria-label="Menos">−</button><span id="qv">1</span><button type="button" id="qp" aria-label="Más">+</button></div></div>
       <div class="sticky-buy">
-        <button class="btn btn-main" id="buy">🛵 Pedir contra entrega</button>
-        <a class="btn btn-wa" id="wa" target="_blank" rel="noopener" aria-label="WhatsApp" hidden>💬<span class="wa-txt"></span></a>
+        <button class="btn btn-main" id="buy">${ic("truck", 20)} Pedir contra entrega</button>
+        <a class="btn btn-wa" id="wa" target="_blank" rel="noopener" aria-label="WhatsApp" hidden>${ic("message", 22)}<span class="wa-txt"></span></a>
       </div>
       <button class="btn btn-ghost" id="add">Agregar al carrito</button>
       <div class="perks">
-        <div><i>💵</i><span><b>Pagas al recibir</b> · sin adelantos ni tarjetas</span></div>
-        <div><i>🚚</i><span>${esc(s.shipping_text || "Envío a domicilio")}</span></div>
-        <div><i>🛡️</i><span>${esc(s.warranty_text || "Garantía de cambio por fallas de fábrica")}</span></div>
+        <div>${ic("wallet")}<span><b>Pagas al recibir</b> · sin adelantos ni tarjetas</span></div>
+        <div>${ic("truck")}<span>${esc(s.shipping_text || "Envío a domicilio")}</span></div>
+        <div>${ic("shield")}<span><b>Garantía de 10 días</b> · si llega incompleto, roto, no funciona o es diferente. <a href="politicas.html">Ver detalles</a></span></div>
       </div>
+      ${p.is_combo ? `<div class="combo" id="comboBox"><b>${ic("layers")} Este combo incluye</b><ul id="comboList"><li>Cargando…</li></ul><small>Todo sale del mismo almacén: llega en un solo paquete.</small></div>` : ""}
       ${p.video_url ? `<div><h2 style="font-size:18px;margin:6px 0 8px">Míralo en acción</h2>${videoHTML(p.video_url)}</div>` : ""}
       ${p.long_description ? `<div><h2 style="font-size:18px;margin:6px 0 6px">Descripción</h2><div class="desc">${esc(p.long_description)}</div></div>` : ""}
     </div>`;
-  const wa = waLink(s, `Hola Todotil 👋 quiero pedir: ${p.name} (${money(p.price)})`);
+  const wa = waLink(s, `Hola Todotil, quiero pedir: ${p.name} (${money(p.price)})`);
   if (wa) { const a = $("#wa"); a.href = wa; a.hidden = false; }
   box.addEventListener("click", (e) => { const t = e.target.closest(".thumbs img"); if (!t) return;
     $("#mainImg").src = imgs[t.dataset.i]; box.querySelectorAll(".thumbs img").forEach((x) => x.classList.toggle("on", x === t)); });
   $("#qm").onclick = () => { qty = Math.max(1, qty - 1); $("#qv").textContent = qty; };
   $("#qp").onclick = () => { qty = Math.min(10, qty + 1); $("#qv").textContent = qty; };
-  $("#add").onclick = () => { cart.add(p, qty); toast("Agregado al carrito ✅"); };
+  $("#add").onclick = () => { cart.add(p, qty); toast("Agregado al carrito"); };
+  if (p.is_combo) {
+    try {
+      const it = await api.comboItems(p.id);
+      const ps = it.length ? await api.productsByIds(it.map((x) => x.product_id)) : [];
+      const by = Object.fromEntries(ps.map((x) => [x.id, x]));
+      $("#comboList").innerHTML = it.map((x) => `<li>${x.qty} × ${esc((by[x.product_id] || {}).name || "Producto")}</li>`).join("") || "<li>Pronto mostraremos el detalle</li>";
+    } catch { $("#comboList").innerHTML = "<li>Pronto mostraremos el detalle</li>"; }
+  }
   $("#buy").onclick = () => { cart.add(p, qty); location.href = "carrito.html#datos"; };
 });
 function videoHTML(url) {

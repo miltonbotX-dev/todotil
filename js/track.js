@@ -22,6 +22,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:18px">${esc(o.public_code)}</b><span class="tag" style="font-size:13px">${esc(STATUS[o.status] || o.status)}</span></div>
         <div style="color:var(--muted);font-size:14px">${(o.items || []).map((i) => `${i.qty}× ${esc(i.name)}`).join("<br>")}</div>
         <div><b>Total a pagar al recibir: ${money(o.total)}</b></div>
+        ${o.packages > 1 ? `<div class="warn">${TD.ic("package")}<span>Tu pedido llega en ${o.packages} paquetes separados.</span></div>` : ""}
         ${o.tracking_code ? `<div class="note">Código de guía: ${esc(o.tracking_code)}</div>` : ""}
         <ul class="tl">${steps.map((st, i) => {
           const cls = bad ? (st.k === o.status ? "bad" : "done") : (i < idx ? "done" : i === idx ? (o.status === "entregado" ? "done" : "cur") : "");

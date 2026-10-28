@@ -10,12 +10,14 @@
 <link rel="stylesheet" href="../css/styles.css">
 <link rel="stylesheet" href="admin.css">
 <script src="../js/config.js" defer></script>
+<script src="../js/ui.js" defer></script>
+<script src="../js/ubigeo.js" defer></script>
 <script src="../js/vendor/supabase.js" defer></script>
 <script src="admin.js" defer></script>
 </head>
 <body>
 <header class="top"><div class="wrap"><a class="brand" href="./"><img src="../img/icon.svg" alt=""><span>Todo<b>til</b></span> <small style="color:var(--muted);font-size:13px;font-weight:700">Panel</small></a>
-  <nav><button class="icon-btn" id="notifBtn" hidden title="Activar avisos">🔔</button><button class="icon-btn" id="outBtn" hidden>Salir</button></nav></div></header>
+  <nav><button class="icon-btn" id="notifBtn" hidden title="Activar avisos" aria-label="Activar avisos"><i data-ic="bell"></i></button><button class="icon-btn" id="outBtn" hidden><i data-ic="logout"></i><span class="hide-s">Salir</span></button></nav></div></header>
 <main class="wrap" style="padding:14px 16px 60px">
   <section id="login" hidden><form id="lf" class="panel" style="max-width:420px;margin:30px auto">
     <h1 style="margin:0 0 6px;font-size:22px">Ingresar al panel</h1>
@@ -36,10 +38,21 @@
   </form></section>
   <section id="noadmin" hidden class="panel" style="max-width:520px;margin:30px auto"></section>
   <section id="app" hidden>
-    <div class="tabs"><button class="chip on" data-t="orders">Pedidos <span class="pill" id="pendCount" hidden>0</span></button><button class="chip" data-t="products">Productos</button><button class="chip" data-t="settings">Ajustes</button></div>
-    <div id="t-orders"><div class="chips" id="sf" style="margin:10px 0"></div><div id="olist"></div></div>
-    <div id="t-products" hidden><div style="margin:10px 0"><button class="btn btn-main" id="newP" style="min-height:44px">+ Nuevo producto</button></div><div id="plist"></div>
-      <p class="hint">Imágenes: por ahora pega URLs (una por línea). Luego conectamos Cloudinary para subir fotos y videos.</p></div>
+    <div class="tabs">
+      <button class="tab on" data-t="orders"><i data-ic="clipboard"></i><span>Pedidos</span><span class="pill" id="pendCount" hidden>0</span></button>
+      <button class="tab" data-t="products"><i data-ic="box"></i><span>Productos</span></button>
+      <button class="tab" data-t="suppliers"><i data-ic="store"></i><span>Proveedores</span></button>
+      <button class="tab" data-t="shipping"><i data-ic="truck"></i><span>Envíos</span></button>
+      <button class="tab" data-t="settings"><i data-ic="settings"></i><span>Ajustes</span></button>
+    </div>
+    <div id="t-orders"><div class="stats" id="stats"></div><div class="chips" id="sf" style="margin:10px 0"></div><div id="olist"></div></div>
+    <div id="t-products" hidden><div class="bar"><h2>Productos</h2><button class="btn btn-main sm" id="newP"><i data-ic="plus"></i>Nuevo producto</button></div><div id="plist"></div>
+      <p class="hint">Imágenes: por ahora pega URLs (una por línea). Un combo solo puede llevar productos del mismo proveedor.</p></div>
+    <div id="t-suppliers" hidden><div class="bar"><h2>Proveedores</h2><button class="btn btn-main sm" id="newS"><i data-ic="plus"></i>Nuevo proveedor</button></div><div id="slist"></div>
+      <p class="hint">Prioriza proveedores con insignia <b>Verificado</b> en Dropi. Cada proveedor despacha su propio paquete.</p></div>
+    <div id="t-shipping" hidden><div class="bar"><h2>Tarifas de envío</h2><button class="btn btn-main sm" id="newR"><i data-ic="plus"></i>Nueva tarifa</button></div>
+      <div class="note" style="margin-bottom:10px"><i data-ic="info"></i><span>Se usa la tarifa más específica (distrito &gt; provincia &gt; departamento) que calce con la cantidad de unidades. Si no hay ninguna, se cobra la tarifa general de Ajustes (Lima/Callao o provincias). Cada paquete (proveedor) paga su envío.</span></div>
+      <div id="rlist"></div></div>
     <div id="t-settings" hidden></div>
   </section>
 </main>

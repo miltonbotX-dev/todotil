@@ -18,13 +18,16 @@
     return data;
   }
 
-  const PCOLS = "id,slug,name,short_description,long_description,price,compare_at_price,images,video_url,category,featured,stock_hint,sort";
+  const PCOLS = "id,slug,name,short_description,long_description,price,compare_at_price,images,video_url,category,featured,stock_hint,sort,supplier_id,is_combo";
   const api = {
     products: () => rest("products?select=" + PCOLS + "&active=eq.true&order=sort.asc,name.asc"),
     product: (slug) => rest("products?select=" + PCOLS + "&active=eq.true&slug=eq." + encodeURIComponent(slug)).then((a) => a[0] || null),
     categories: () => rest("categories?select=slug,name&active=eq.true&order=sort.asc"),
     settings: (() => { let p; return () => (p ||= rest("app_settings?select=*&id=eq.1").then((a) => a[0] || {}).catch(() => ({}))); })(),
     createOrder: (payload) => rpc("create_order", { payload }),
+    quote: (payload) => rpc("quote_cart", { payload }),
+    comboItems: (id) => rest("combo_items?select=qty,product_id&combo_id=eq." + encodeURIComponent(id)),
+    productsByIds: (ids) => rest("products?select=id,slug,name,images&id=in.(" + ids.map(encodeURIComponent).join(",") + ")"),
     track: (code, last4) => rpc("get_order_status", { p_code: code, p_phone_last4: last4 }),
   };
 
@@ -50,25 +53,23 @@
     const n = String(settings.whatsapp || "").replace(/\D/g, "");
     return n ? "https://wa.me/" + n + "?text=" + encodeURIComponent(text) : null;
   }
-  function toast(msg) {
-    let t = $("#toast"); if (!t) { t = document.createElement("div"); t.id = "toast"; t.className = "toast"; document.body.appendChild(t); }
-    t.textContent = msg; t.classList.add("on"); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("on"), 1800);
-  }
+  const toast = (msg, tone) => UI.toast(msg, tone);
+  const ic = (n, s) => UI.icon(n, s);
   function cardHTML(p) {
     const img = (p.images || [])[0] || "img/icon-512.png";
     return `<a class="card" href="producto.html?p=${encodeURIComponent(p.slug)}">
       <div class="ph"><img loading="lazy" src="${esc(img)}" alt="${esc(p.name)}"></div>
-      <div class="bd">${p.featured ? '<span class="tag">🔥 Más pedido</span>' : ""}
+      <div class="bd">${p.is_combo ? `<span class="tag" style="background:var(--blue-l);color:var(--blue-d)">${ic("layers", 13)} Combo</span>` : ""}${p.featured ? '<span class="tag">${ic("flame", 13)} Más pedido</span>' : ""}
         <h3>${esc(p.name)}</h3>
         <div><span class="price">${money(p.price)}</span>${p.compare_at_price ? `<span class="was">Antes ${money(p.compare_at_price)}</span>` : ""}</div>
       </div></a>`;
   }
   function header() {
     const el = $("#top"); if (!el) return;
-    el.innerHTML = `<div class="strip">🚚 Pago contra entrega · Pagas cuando lo recibes</div>
+    el.innerHTML = `<div class="strip">${ic("truck", 15)} Pago contra entrega · Pagas cuando lo recibes</div>
       <div class="wrap"><a class="brand" href="index.html"><img src="img/icon.svg" alt=""><span>Todo<b>til</b></span></a>
-      <nav><a class="icon-btn" href="seguimiento.html" title="Sigue tu pedido">📦<span class="hide-s">Mi pedido</span></a>
-      <a class="icon-btn" href="carrito.html" aria-label="Carrito">🛒<span class="badge" id="cartCount" hidden>0</span></a></nav></div>`;
+      <nav><a class="icon-btn" href="seguimiento.html" title="Sigue tu pedido">${ic("package", 20)}<span class="hide-s">Mi pedido</span></a>
+      <a class="icon-btn" href="carrito.html" aria-label="Carrito">${ic("cart", 20)}<span class="badge" id="cartCount" hidden>0</span></a></nav></div>`;
     cart.badge();
   }
   async function footer() {
@@ -79,13 +80,13 @@
       <div class="brand" style="color:#fff"><img src="img/icon.svg" alt=""><span>Todo<b>til</b></span></div>
       <div>${esc(s.tagline || "Lo útil, al mejor precio · Pago contra entrega")}</div>
       <div><a href="seguimiento.html">Sigue tu pedido</a> · <a href="politicas.html">Garantía y cambios</a>${wa ? ` · <a href="${wa}" target="_blank" rel="noopener">WhatsApp</a>` : ""}</div>
-      <div style="opacity:.7">© ${new Date().getFullYear()} Todotil · Perú</div></div>`;
+      <div style="opacity:.7">Todotil · Perú</div></div>`;
   }
   const STATUS = {
     pendiente: "Pedido recibido", aprobado: "Pedido confirmado", enviado_a_dropi: "Preparando tu pedido",
     en_camino: "En camino", entregado: "Entregado", cancelado: "Cancelado", devuelto: "Devuelto",
   };
 
-  window.TD = { $, esc, money, api, cart, waLink, toast, cardHTML, header, footer, STATUS };
+  window.TD = { $, esc, money, api, cart, waLink, toast, ic, cardHTML, header, footer, STATUS };
   document.addEventListener("DOMContentLoaded", () => { header(); footer(); });
 })();

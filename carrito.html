@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Tu carrito · Todotil</title>
-<meta name="description" content="Productos útiles para tu casa, tu auto y tu día a día. Pago contra entrega en Lima.">
+<meta name="description" content="Productos útiles para tu casa, tu auto y tu día a día. Pago contra entrega.">
 <meta name="theme-color" content="#1D4ED8">
 <link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32.png">
 <link rel="icon" type="image/svg+xml" href="img/icon.svg">
@@ -13,7 +13,7 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Todotil">
 <meta property="og:title" content="Tu carrito · Todotil">
-<meta property="og:description" content="Productos útiles para tu casa, tu auto y tu día a día. Pago contra entrega en Lima.">
+<meta property="og:description" content="Productos útiles para tu casa, tu auto y tu día a día. Pago contra entrega.">
 <meta property="og:image" content="img/cover-facebook.png">
 <meta property="og:locale" content="es_PE">
 <meta name="twitter:card" content="summary_large_image">
@@ -21,9 +21,10 @@
 <link rel="preload" href="fonts/nunito.woff" as="font" type="font/woff" crossorigin>
 <link rel="stylesheet" href="css/styles.css">
 <script src="js/config.js" defer></script>
+<script src="js/ui.js" defer></script>
 <script src="js/app.js" defer></script>
 <meta name="robots" content="noindex">
-<script src="js/peru.js" defer></script>
+<script src="js/ubigeo.js" defer></script>
 <script src="js/checkout.js" defer></script>
 </head>
 <body>
@@ -33,7 +34,7 @@
   <div id="cartBox"></div>
   <form id="form" class="panel" style="margin-top:14px" hidden novalidate autocomplete="on">
     <h2 style="margin:0 0 4px;font-size:19px">Datos de envío</h2>
-    <div class="note">💵 Pagas en efectivo o Yape cuando recibes tu pedido. [EDITAR: medios de pago aceptados]</div>
+    <div class="note"><i data-ic="wallet"></i><span id="payTxt">Pagas al momento de recibir tu pedido.</span></div>
     <div class="row2">
       <div><label for="name">Nombre</label><input id="name" name="given-name" autocomplete="given-name" required maxlength="60"></div>
       <div><label for="surname">Apellido</label><input id="surname" name="family-name" autocomplete="family-name" required maxlength="60"></div>
@@ -41,8 +42,8 @@
     <label for="phone">Celular (WhatsApp)</label>
     <input id="phone" name="tel" type="tel" inputmode="numeric" autocomplete="tel-national" placeholder="9XX XXX XXX" required maxlength="11">
     <label for="dept">Departamento</label><select id="dept" required></select>
-    <div id="provBox" hidden><label for="prov">Provincia</label><input id="prov" maxlength="60"></div>
-    <label for="dist">Distrito</label><select id="distSel"></select><input id="dist" maxlength="60" placeholder="Escribe tu distrito" hidden>
+    <label for="prov">Provincia</label><select id="prov" required></select>
+    <label for="dist">Distrito</label><select id="dist" required></select>
     <label for="addr">Dirección</label><input id="addr" autocomplete="street-address" placeholder="Av./Jr./Calle, número, dpto." required maxlength="200">
     <label for="ref">Referencia <small>(ayuda al motorizado)</small></label><input id="ref" placeholder="Ej. frente al parque, puerta verde" maxlength="200">
     <div class="row2">
