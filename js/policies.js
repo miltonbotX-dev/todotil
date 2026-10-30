@@ -14,6 +14,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         <tr><td>Zonas alejadas o rurales</td><td>Puede tardar más; te lo confirmamos por WhatsApp</td></tr>
       </tbody></table>
       <div class="desc" style="margin-top:6px;font-size:14px;color:var(--muted)">Son tiempos estimados, no garantizados: se cuentan desde que confirmamos tu pedido por WhatsApp y dependen de la empresa de transporte y de tu ubicación. Antes del despacho te confirmamos por WhatsApp la fecha estimada de entrega.</div></div>
-    <div><h2 style="font-size:18px;margin:0 0 4px">${ic("message")} Reclamos</h2><div class="desc">¿Tuviste un problema con tu pedido? ${wa ? `<a href="${wa}" target="_blank" rel="noopener">Escríbenos por WhatsApp</a>` : "Escríbenos"} con tu código de pedido y te respondemos. También puedes registrar un reclamo o una queja en nuestro <a href="libro-reclamaciones.html">Libro de Reclamaciones</a>.</div></div>`;
+    <div><h2 style="font-size:18px;margin:0 0 4px">${ic("message")} Reclamos</h2><div class="desc">¿Tuviste un problema con tu pedido? ${wa ? `<a href="${wa}" target="_blank" rel="noopener">Escríbenos por WhatsApp</a>` : "Escríbenos"} con tu código de pedido y te respondemos.${TD_CONFIG.LIBRO_RECLAMACIONES_ON ? ' También puedes registrar un reclamo o una queja en nuestro <a href="libro-reclamaciones.html">Libro de Reclamaciones</a>.' : ""}</div></div>`;
   if (location.hash === "#entregas") setTimeout(() => $("#entregas").scrollIntoView({ behavior: "smooth" }), 100);
 });

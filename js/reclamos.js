@@ -1,5 +1,6 @@
 // Libro de Reclamaciones virtual (D.S. 011-2011-PCM, Anexo I). Guarda vía RPC submit_complaint (solo inserta).
 document.addEventListener("DOMContentLoaded", async () => {
+  if (!TD_CONFIG.LIBRO_RECLAMACIONES_ON) return; // oculto: la página redirige al inicio
   const { $, esc, api, ic, money } = TD;
   const s = await api.settings();
   const pend = '<span class="pend">por completar</span>';

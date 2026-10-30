@@ -126,7 +126,7 @@
       <div>${esc(s.tagline || "Lo útil, al mejor precio · Pago contra entrega")}</div>
       <div class="foot-links"><a href="como-comprar.html">Cómo comprar</a> · <a href="seguimiento.html">Sigue tu pedido</a> · <a href="politicas.html">Cambios y envíos</a> · <a href="privacidad.html">Privacidad</a>${wa ? ` · <a href="${wa}" target="_blank" rel="noopener">WhatsApp</a>` : ""}</div>
       ${s.business_hours ? `<div>${ic("clock", 15)} Atención: ${esc(s.business_hours)}</div>` : ""}
-      <a class="foot-lr" href="libro-reclamaciones.html">${ic("book", 22)}<span>Libro de Reclamaciones</span></a>
+      ${TD_CONFIG.LIBRO_RECLAMACIONES_ON ? `<a class="foot-lr" href="libro-reclamaciones.html">${ic("book", 22)}<span>Libro de Reclamaciones</span></a>` : ""}
       ${wa ? `<a class="foot-wa" href="${wa}" target="_blank" rel="noopener">${waIcon(20)}<span>¿Dudas? Te atendemos por WhatsApp: <b>${waPretty(s)}</b></span></a>` : ""}
       <div style="opacity:.7">Todotil · Perú</div></div>`;
   }

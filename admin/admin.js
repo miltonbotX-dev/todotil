@@ -1,6 +1,7 @@
 // Todotil · panel de administración (Supabase Auth + RLS + Realtime)
 (function () {
   const C = window.TD_CONFIG;
+  const LR_ON = !!C.LIBRO_RECLAMACIONES_ON; // Libro de Reclamaciones oculto mientras sea false
   // Enlace de invitación / recuperación: llega con #access_token=...&type=invite|recovery
   const hp = new URLSearchParams(location.hash.slice(1));
   if (["invite", "recovery"].includes(hp.get("type"))) sessionStorage.setItem("todotil.needpw", "1");
@@ -30,7 +31,7 @@
     }
     show("app");
     if ("Notification" in window && Notification.permission === "default") $("#notifBtn").hidden = false;
-    await Promise.all([loadOrders(), loadSuppliers(), loadProducts(), loadComplaints()]);
+    await Promise.all([loadOrders(), loadSuppliers(), loadProducts(), LR_ON ? loadComplaints() : null]);
     listen();
   }
 
@@ -73,6 +74,7 @@
   $("#notifBtn").onclick = async () => { await Notification.requestPermission(); $("#notifBtn").hidden = Notification.permission !== "default"; beep(); };
 
   // ---------- Tabs ----------
+  if (!LR_ON) document.querySelector('.tabs [data-t="complaints"]')?.remove();
   const TABS = ["orders", "products", "suppliers", "shipping", "complaints", "settings"];
   document.querySelector(".tabs").addEventListener("click", (e) => {
     const b = e.target.closest(".tab"); if (!b) return;
@@ -505,8 +507,8 @@
       <div hidden><div class="row2"><div><label>Envío general Lima/Callao S/</label><input id="s_fl" type="number" step="0.5" value="${s.shipping_fee_lima}"></div>
       <div><label>Envío general provincias S/</label><input id="s_fp" type="number" step="0.5" value="${s.shipping_fee_provincia}"></div></div>
       <p class="hint" style="margin:6px 0 0">Se usa cuando no hay una tarifa en la pestaña Envíos. Se cobra por paquete (proveedor).</p></div>
-      <h3 style="margin:16px 0 0;font-size:16px">Datos del negocio <small style="color:var(--muted)">(Libro de Reclamaciones y Privacidad)</small></h3>
-      ${!s.legal_name || !s.ruc || !s.legal_address ? `<div class="warn">${ic("alert", 18)}<span>Faltan datos obligatorios para el Libro de Reclamaciones: ${[!s.legal_name && "nombre o razón social", !s.ruc && "RUC", !s.legal_address && "dirección"].filter(Boolean).join(", ")}.</span></div>` : ""}
+      <h3 style="margin:16px 0 0;font-size:16px">Datos del negocio <small style="color:var(--muted)">(opcional · si falta un dato, no se muestra en la web)</small></h3>
+      ${LR_ON && (!s.legal_name || !s.ruc || !s.legal_address) ? `<div class="warn">${ic("alert", 18)}<span>Faltan datos obligatorios para el Libro de Reclamaciones: ${[!s.legal_name && "nombre o razón social", !s.ruc && "RUC", !s.legal_address && "dirección"].filter(Boolean).join(", ")}.</span></div>` : ""}
       <label>Nombre o razón social</label><input id="s_ln" value="${esc(s.legal_name || "")}">
       <div class="row2"><div><label>RUC</label><input id="s_ruc" inputmode="numeric" maxlength="11" value="${esc(s.ruc || "")}"></div>
       <div><label>Correo de contacto</label><input id="s_ce" type="email" value="${esc(s.contact_email || "")}"></div></div>
