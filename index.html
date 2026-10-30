@@ -14,16 +14,16 @@
 <meta property="og:site_name" content="Todotil">
 <meta property="og:title" content="Todotil · Lo útil, al mejor precio">
 <meta property="og:description" content="Productos útiles para tu casa, tu auto y tu día a día. Pago contra entrega en Lima.">
-<meta property="og:image" content="img/cover-facebook.png">
+<meta property="og:image" content="https://miltonbotx-dev.github.io/todotil/img/cover-facebook.png">
 <meta property="og:locale" content="es_PE">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://gywaofxlixdzcexvdafo.supabase.co">
 <link rel="preload" href="fonts/nunito.woff" as="font" type="font/woff" crossorigin>
-<link rel="stylesheet" href="css/styles.css">
-<script src="js/config.js" defer></script>
-<script src="js/ui.js" defer></script>
-<script src="js/app.js" defer></script>
-<script src="js/home.js" defer></script>
+<link rel="stylesheet" href="css/styles.css?v=6">
+<script src="js/config.js?v=6" defer></script>
+<script src="js/ui.js?v=6" defer></script>
+<script src="js/app.js?v=6" defer></script>
+<script src="js/home.js?v=6" defer></script>
 </head>
 <body>
 <header class="top" id="top"></header>
@@ -33,7 +33,12 @@
   <div class="trust"><div><i data-ic="wallet" data-size="22"></i>Pago contra entrega</div><div><i data-ic="truck" data-size="22"></i>Envío a domicilio</div><div><i data-ic="shield" data-size="22"></i>Garantía 10 días</div></div>
 </div></section>
 <main class="wrap">
-  <section class="sec"><div class="chips" id="cats"></div></section>
+  <section class="sec">
+    <div class="tools">
+      <label class="srch"><i data-ic="search" data-size="18"></i><input id="q" type="text" inputmode="search" enterkeyhint="search" autocomplete="off" placeholder="Buscar producto" aria-label="Buscar productos"></label>
+      <div class="sortb"><select id="sort" aria-label="Ordenar"><option value="">Recomendados</option><option value="pa">Menor precio</option><option value="pd">Mayor precio</option><option value="combo">Combos primero</option></select></div>
+    </div>
+    <div class="chips" id="cats"></div></section>
   <section class="sec" id="featSec"><h2>Lo más pedido</h2><div class="grid" id="feat"><div class="skeleton"></div><div class="skeleton"></div></div></section>
   <section class="sec"><h2 id="allTitle">Todos los productos</h2><div class="grid" id="all"></div></section>
   <section class="sec"><div class="panel stack">

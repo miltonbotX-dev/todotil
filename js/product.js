@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const gal = [...imgs.map((u) => ({ t: "img", u })), ...vids.map((v) => ({ t: "vid", u: v.url, poster: v.poster }))];
   const mainHTML = (g) => g.t === "vid"
     ? UI.player(g.u, g.poster, "in-gal")
-    : `<img id="mainImg" src="${esc(g.u)}" alt="${esc(p.name)}">`;
+    : `<img id="mainImg" src="${esc(g.u)}" alt="${esc(p.name)}" draggable="false" fetchpriority="high">`;
   let qty = 1;
   box.innerHTML = `
     <div><div class="gal-main" id="galMain">${mainHTML(gal[0])}</div>
@@ -20,7 +20,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     </div>
     <div class="stack">
       <div><h1>${esc(p.name)}</h1>
-        <div><span class="price">${money(p.price)}</span>${p.compare_at_price ? `<span class="was">Antes ${money(p.compare_at_price)}</span>` : ""}</div>
+        <div><span class="price">${money(p.price)}</span>${p.compare_at_price ? `<span class="was">Antes ${money(p.compare_at_price)}</span>` : ""}<span class="save" id="save" hidden></span></div>
+        ${p.stock_hint != null && p.stock_hint > 0 && p.stock_hint <= 15 ? `<div class="low" style="margin-top:4px">¡Quedan pocas unidades!</div>` : ""}
         ${p.short_description ? `<p style="margin:8px 0 0;font-weight:700">${esc(p.short_description)}</p>` : ""}</div>
       <div style="display:flex;align-items:center;gap:12px"><b>Cantidad</b>
         <div class="qty"><button type="button" id="qm" aria-label="Menos">−</button><span id="qv">1</span><button type="button" id="qp" aria-label="Más">+</button></div></div>
@@ -37,6 +38,13 @@ document.addEventListener("DOMContentLoaded", async () => {
       ${p.is_combo ? `<div class="combo" id="comboBox"><b>${ic("layers")} Este combo incluye</b><ul id="comboList"><li>Cargando…</li></ul><small>Todo sale del mismo almacén: llega en un solo paquete.</small></div>` : ""}
       ${p.video_url ? `<div><h2 style="font-size:18px;margin:6px 0 8px">Míralo en acción</h2>${videoHTML(p.video_url)}</div>` : ""}
       ${p.long_description ? `<div><h2 style="font-size:18px;margin:6px 0 6px">Descripción</h2><div class="desc">${esc(p.long_description)}</div></div>` : ""}
+      <div><h2 style="font-size:18px;margin:6px 0 8px">Preguntas frecuentes</h2><div class="faq">
+        <details><summary>¿Cómo pago?</summary><p>Pagas en efectivo cuando el producto llega a tu puerta. No pedimos adelantos ni datos de tarjeta.</p></details>
+        <details><summary>¿Cuánto cuesta el envío y cuánto demora?</summary><p>Después de tu pedido te escribimos por WhatsApp para confirmar el costo de envío a tu distrito y la fecha estimada de entrega.</p></details>
+        <details><summary>¿Y si llega roto o no funciona?</summary><p>Tienes garantía de 10 días: si llega incompleto, roto, no funciona o es diferente, te lo cambiamos. <a href="politicas.html">Ver garantía</a>.</p></details>
+        <details><summary>¿Puedo pedir por WhatsApp?</summary><p>¡Claro! Toca el botón verde de WhatsApp y te atendemos personalmente.</p></details>
+      </div></div>
+      <div><button type="button" class="share-btn" id="share">${ic("share", 16)} Compartir</button></div>
     </div>`;
   setWaText(`Hola Todotil, quiero información sobre: ${p.name} (${money(p.price)})`);
   const wa = waLink(s, `Hola Todotil, quiero pedir: ${p.name} (${money(p.price)})`);
@@ -45,16 +53,26 @@ document.addEventListener("DOMContentLoaded", async () => {
     $("#galMain").innerHTML = mainHTML(gal[t.dataset.i]); box.querySelectorAll(".thumbs [data-i]").forEach((x) => x.classList.toggle("on", x === t)); });
   $("#qm").onclick = () => { qty = Math.max(1, qty - 1); $("#qv").textContent = qty; };
   $("#qp").onclick = () => { qty = Math.min(10, qty + 1); $("#qv").textContent = qty; };
-  $("#add").onclick = () => { cart.add(p, qty); toast("Agregado al carrito"); };
+  $("#add").onclick = () => { cart.add(p, qty); TD.track("AddToCart", p, qty); toast("Agregado al carrito"); };
   if (p.is_combo) {
     try {
       const it = await api.comboItems(p.id);
       const ps = it.length ? await api.productsByIds(it.map((x) => x.product_id)) : [];
       const by = Object.fromEntries(ps.map((x) => [x.id, x]));
       $("#comboList").innerHTML = it.map((x) => `<li>${x.qty} × ${esc((by[x.product_id] || {}).name || "Producto")}</li>`).join("") || "<li>Pronto mostraremos el detalle</li>";
+      const sep = it.every((x) => by[x.product_id] && by[x.product_id].price) ? it.reduce((a, x) => a + x.qty * Number(by[x.product_id].price), 0) : 0;
+      if (sep > Number(p.price)) { const sv = $("#save"); sv.textContent = "Ahorras " + money(sep - Number(p.price)); sv.hidden = false;
+        $("#comboBox").insertAdjacentHTML("beforeend", `<small style="display:block;margin-top:4px">Por separado: <s>${money(sep)}</s> · En combo: <b>${money(p.price)}</b></small>`); }
     } catch { $("#comboList").innerHTML = "<li>Pronto mostraremos el detalle</li>"; }
   }
-  $("#buy").onclick = () => { cart.add(p, qty); location.href = "carrito.html#datos"; };
+  $("#buy").onclick = () => { cart.add(p, qty); TD.track("AddToCart", p, qty); location.href = "carrito.html#datos"; };
+  $("#share").onclick = async () => {
+    const url = location.origin + location.pathname + "?p=" + encodeURIComponent(p.slug);
+    const text = `${p.name} a ${money(p.price)} · pagas al recibir`;
+    if (navigator.share) { try { await navigator.share({ title: p.name, text, url }); } catch (_) {} return; }
+    try { await navigator.clipboard.writeText(url); toast("Enlace copiado"); } catch (_) { location.href = "https://wa.me/?text=" + encodeURIComponent(text + " " + url); }
+  };
+  TD.track("ViewContent", p);
 });
 function videoHTML(url) {
   const u = String(url);

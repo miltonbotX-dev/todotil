@@ -213,3 +213,26 @@ dialog.tp-drop{flex-direction:column}
 .tdv:-webkit-full-screen{width:100vw;height:100vh}
 .tdv.fsx{position:fixed!important;inset:0;z-index:9999}
 html.tdv-lock,html.tdv-lock body{overflow:hidden}
+/* ===== v6 ===== */
+.gal-main img,.thumbs img,.card .ph img{-webkit-touch-callout:none;-webkit-user-drag:none;user-select:none}
+.thumbs .tvid video{pointer-events:none}
+.tdv video::-webkit-media-controls-enclosure,.tdv video::-webkit-media-controls-panel,.tdv video::-internal-media-controls-download-button,.tdv video::-webkit-media-controls-overflow-button{display:none!important}
+.tdv.fsx{width:100vw;height:100vh;height:100dvh;z-index:2147483000}
+.tools{display:flex;gap:8px;align-items:center;margin-bottom:10px}
+.srch{flex:1;display:flex;align-items:center;gap:8px;border:1.5px solid var(--line);border-radius:12px;background:#fff;padding:0 12px;color:var(--muted)}
+.srch input{border:0;padding:11px 0;background:transparent;outline:none}
+.srch:focus-within{border-color:var(--blue)}
+.sortb{flex:none;width:auto;min-width:0}
+.sortb .tp-btn{padding:11px 12px;font-size:14.5px;font-weight:700}
+.low{color:var(--bad);font-size:12px;font-weight:800}
+.save{display:inline-block;background:#DCFCE7;color:#166534;font-weight:800;font-size:13px;border-radius:8px;padding:3px 8px;margin-left:6px;vertical-align:middle}
+.faq{background:#fff;border-radius:var(--r);box-shadow:var(--shadow);padding:4px 14px}
+.faq details{border-bottom:1px solid var(--line);padding:12px 0}.faq details:last-child{border-bottom:0}
+.faq summary{font-weight:800;cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:10px;align-items:center}
+.faq summary::-webkit-details-marker{display:none}.faq summary:after{content:"+";font-size:22px;color:var(--blue);line-height:1}
+.faq details[open] summary:after{content:"−"}.faq details p{margin:8px 0 0;color:#334155}
+.share-btn{display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:7px 12px;font-weight:700;font-size:14px;color:var(--ink);cursor:pointer}
+.badges{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+@media(min-width:720px){.badges{grid-template-columns:repeat(4,1fr)}}
+.badges div{background:#fff;border-radius:var(--r);box-shadow:var(--shadow);padding:12px;display:flex;gap:10px;align-items:center;font-size:13.5px;line-height:1.25}
+.badges .ic{color:var(--blue);flex:none}

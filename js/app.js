@@ -27,7 +27,7 @@
     createOrder: (payload) => rpc("create_order", { payload }),
     quote: (payload) => rpc("quote_cart", { payload }),
     comboItems: (id) => rest("combo_items?select=qty,product_id&combo_id=eq." + encodeURIComponent(id)),
-    productsByIds: (ids) => rest("products?select=id,slug,name,images&id=in.(" + ids.map(encodeURIComponent).join(",") + ")"),
+    productsByIds: (ids) => rest("products?select=id,slug,name,images,price&id=in.(" + ids.map(encodeURIComponent).join(",") + ")"),
     track: (code, last4) => rpc("get_order_status", { p_code: code, p_phone_last4: last4 }),
   };
 
@@ -72,10 +72,11 @@
   function cardHTML(p) {
     const img = (p.images || [])[0] || "img/icon-512.png";
     return `<a class="card" href="producto.html?p=${encodeURIComponent(p.slug)}">
-      <div class="ph"><img loading="lazy" src="${esc(img)}" alt="${esc(p.name)}"></div>
-      <div class="bd">${p.is_combo ? `<span class="tag" style="background:var(--blue-l);color:var(--blue-d)">${ic("layers", 13)} Combo</span>` : ""}${p.featured ? `<span class="tag">${ic("flame", 13)} Más pedido</span>` : ""}
+      <div class="ph"><img loading="lazy" decoding="async" width="400" height="400" src="${esc(img)}" alt="${esc(p.name)}" draggable="false"></div>
+      <div class="bd">${p.is_combo ? `<span class="tag" style="background:var(--blue-l);color:var(--blue-d)">${ic("layers", 13)} Combo</span>` : ""}${p.featured ? `<span class="tag">${ic("flame", 13)} Destacado</span>` : ""}
         <h3>${esc(p.name)}</h3>
         <div><span class="price">${money(p.price)}</span>${p.compare_at_price ? `<span class="was">Antes ${money(p.compare_at_price)}</span>` : ""}</div>
+        ${p.stock_hint != null && p.stock_hint > 0 && p.stock_hint <= 15 ? `<span class="low">¡Últimas ${p.stock_hint} unidades!</span>` : ""}
       </div></a>`;
   }
   function header() {
@@ -106,6 +107,18 @@
     en_camino: "En camino", entregado: "Entregado", cancelado: "Cancelado", devuelto: "Devuelto",
   };
 
-  window.TD = { $, esc, money, api, cart, waLink, waIcon, setWaText, toast, ic, cardHTML, header, footer, STATUS };
+  // Meta Pixel (se activa solo si TD_CONFIG.PIXEL_ID tiene valor)
+  if (C.PIXEL_ID && !window.fbq) {
+    !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version="2.0";n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,"script","https://connect.facebook.net/en_US/fbevents.js");
+    if (!/\/admin\//.test(location.pathname)) { fbq("init", C.PIXEL_ID); fbq("track", "PageView"); }
+  }
+  function track(ev, p, qty = 1, extra = {}) {
+    try {
+      if (!window.fbq || !C.PIXEL_ID) return;
+      const d = p ? { content_ids: [String(p.slug || p.id)], content_name: p.name, content_type: "product", value: Number(p.price) * qty, currency: "PEN" } : {};
+      fbq("track", ev, Object.assign(d, extra));
+    } catch (_) {}
+  }
+  window.TD = { track, $, esc, money, api, cart, waLink, waIcon, setWaText, toast, ic, cardHTML, header, footer, STATUS };
   document.addEventListener("DOMContentLoaded", () => { header(); footer(); waFab(); });
 })();

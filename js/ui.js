@@ -1,6 +1,8 @@
 // Todotil UI · iconos SVG propios (estilo trazo, sin CDN) + ventanas y avisos personalizados.
 (function () {
   const P = {
+    share: '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.59 13.51 6.83 3.98M15.41 6.51l-6.82 3.98"/>',
+    sort: '<path d="m3 16 4 4 4-4M7 20V4M21 8l-4-4-4 4M17 4v16"/>',
     truck: '<path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.62l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/>',
     package: '<path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"/><path d="M12 22V12"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="m7.5 4.27 9 5.15"/>',
     cart: '<circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>',
@@ -250,7 +252,7 @@
 
   // ===== Reproductor de video propio (sin controles nativos => sin menú "Descargar") =====
   function player(src, poster = "", cls = "") {
-    return `<div class="tdv ${cls}" data-src="${esc(src)}"><video ${poster ? `poster="${esc(poster)}"` : ""} src="${esc(src)}${poster ? "" : "#t=0.5"}" playsinline webkit-playsinline preload="metadata" disablePictureInPicture disableRemotePlayback controlsList="nodownload noplaybackrate noremoteplayback" tabindex="-1"></video>
+    return `<div class="tdv ${cls}" data-src="${esc(src)}"><video ${poster ? `poster="${esc(poster)}"` : ""} src="${esc(src)}${poster ? "" : "#t=0.5"}" playsinline webkit-playsinline preload="metadata" disablePictureInPicture disableRemotePlayback controlsList="nodownload nofullscreen noplaybackrate noremoteplayback" draggable="false" tabindex="-1"></video>
       <div class="tdv-hit" aria-hidden="true"></div>
       <button type="button" class="tdv-big" aria-label="Reproducir">${icon("play", 30)}</button>
       <div class="tdv-bar">
@@ -265,7 +267,8 @@
   function mountPlayer(el) {
     if (el._tdv) return; el._tdv = true;
     const v = el.querySelector("video"), q = (c) => el.querySelector(c);
-    v.controls = false; v.removeAttribute("controls");
+    v.controls = false; v.removeAttribute("controls"); v.setAttribute("controlsList", "nodownload nofullscreen noplaybackrate noremoteplayback"); v.disablePictureInPicture = true; v.disableRemotePlayback = true; v.draggable = false;
+    new MutationObserver(() => { if (v.controls) v.controls = false; }).observe(v, { attributes: true, attributeFilter: ["controls"] });
     const big = q(".tdv-big"), pp = q(".tdv-pp"), prog = q(".tdv-prog"), bar = prog.querySelector("i"), tt = q(".tdv-t"), mu = q(".tdv-mute"), fs = q(".tdv-fs");
     let hideT;
     const sync = () => {
@@ -283,15 +286,22 @@
     const seek = (e) => { const r = prog.getBoundingClientRect(), x = ((e.touches ? e.touches[0].clientX : e.clientX) - r.left) / r.width; if (v.duration) v.currentTime = Math.min(1, Math.max(0, x)) * v.duration; tick(); wake(); };
     prog.addEventListener("pointerdown", (e) => { seek(e); const mv = (ev) => seek(ev), up = () => { removeEventListener("pointermove", mv); removeEventListener("pointerup", up); }; addEventListener("pointermove", mv); addEventListener("pointerup", up); });
     prog.addEventListener("keydown", (e) => { if (!v.duration) return; if (e.key === "ArrowRight") v.currentTime = Math.min(v.duration, v.currentTime + 5); if (e.key === "ArrowLeft") v.currentTime = Math.max(0, v.currentTime - 5); });
-    const isFs = () => (document.fullscreenElement || document.webkitFullscreenElement) === el || el.classList.contains("fsx");
+    const isFs = () => el.classList.contains("fsx");
     const fsIcon = () => { const f = isFs(); fs.innerHTML = icon(f ? "minimize" : "maximize", 18); fs.setAttribute("aria-label", f ? "Salir de pantalla completa" : "Pantalla completa"); el.classList.toggle("is-fs", f); };
-    fs.onclick = () => {
-      if (isFs()) { if (el.classList.contains("fsx")) { el.classList.remove("fsx"); document.documentElement.classList.remove("tdv-lock"); } else (document.exitFullscreen || document.webkitExitFullscreen).call(document); }
-      else if (el.requestFullscreen) el.requestFullscreen().catch(() => { el.classList.add("fsx"); document.documentElement.classList.add("tdv-lock"); fsIcon(); });
-      else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
-      else { el.classList.add("fsx"); document.documentElement.classList.add("tdv-lock"); } // iPhone: pantalla completa propia
-      fsIcon(); wake();
-    };
+    // Pantalla completa propia: el <video> nunca entra en el modo de video del navegador (que trae sus propios botones,
+    // incluido "Descargar"). Se agranda el contenedor .tdv y, si se puede, se pide pantalla completa del documento.
+    const enterFs = () => { el.classList.add("fsx"); document.documentElement.classList.add("tdv-lock");
+      const d = document.documentElement, rq = d.requestFullscreen || d.webkitRequestFullscreen;
+      if (rq) try { const r = rq.call(d, { navigationUI: "hide" }); if (r && r.catch) r.catch(() => {}); } catch (_) {}
+      try { screen.orientation && screen.orientation.lock && v.videoWidth > v.videoHeight && screen.orientation.lock("landscape").catch(() => {}); } catch (_) {} };
+    const exitFs = () => { el.classList.remove("fsx"); document.documentElement.classList.remove("tdv-lock");
+      if (document.fullscreenElement || document.webkitFullscreenElement) { const ex = document.exitFullscreen || document.webkitExitFullscreen; try { const r = ex.call(document); if (r && r.catch) r.catch(() => {}); } catch (_) {} } };
+    fs.onclick = () => { if (isFs()) exitFs(); else enterFs(); setTimeout(fsIcon, 0); fsIcon(); wake(); };
+    // Si el usuario sale con el botón "atrás"/gesto del sistema, cerramos también la vista propia
+    const onDocFs = () => { if (!(document.fullscreenElement || document.webkitFullscreenElement) && el.classList.contains("fsx") && el._wasDocFs) exitFs(); el._wasDocFs = !!(document.fullscreenElement || document.webkitFullscreenElement); fsIcon(); };
+    document.addEventListener("fullscreenchange", onDocFs); document.addEventListener("webkitfullscreenchange", onDocFs);
+    // Por si algún navegador intenta su propio modo de video a pantalla completa
+    v.addEventListener("webkitbeginfullscreen", () => { try { v.webkitExitFullscreen(); } catch (_) {} enterFs(); fsIcon(); });
     document.addEventListener("fullscreenchange", fsIcon); document.addEventListener("webkitfullscreenchange", fsIcon);
     ["play", "pause", "ended", "volumechange"].forEach((n) => v.addEventListener(n, () => { sync(); wake(); }));
     ["timeupdate", "loadedmetadata", "durationchange"].forEach((n) => v.addEventListener(n, tick));
@@ -303,14 +313,17 @@
   // Ningún <video> del sitio muestra menú contextual (Guardar/Descargar video)
   document.addEventListener("contextmenu", (e) => { if (e.target.closest && e.target.closest("video, .tdv, .gal-main, .thumbs")) e.preventDefault(); }, true);
 
+  // Ningún <video> del sitio puede mostrar controles nativos (aunque otro script se los ponga)
+  const killNative = (r) => r.querySelectorAll && r.querySelectorAll("video").forEach((x) => { if (x.controls) x.controls = false; x.removeAttribute("controls"); x.disablePictureInPicture = true; x.disableRemotePlayback = true; });
+  document.addEventListener("dragstart", (e) => { if (e.target.closest && e.target.closest("video, .tdv, .gal-main, .thumbs")) e.preventDefault(); }, true);
   window.UI = { player, mountPlayers, icon, hydrate, modal, alert: alertBox, confirm: confirmBox, toast, esc, enhanceSelect, enhanceAll, fieldError, clearFieldError, clearErrors };
   document.addEventListener("DOMContentLoaded", () => {
     hydrate();
     // Ningún formulario usa las burbujas de validación del navegador
     document.querySelectorAll("form").forEach((f) => (f.noValidate = true));
-    enhanceAll(); mountPlayers();
+    enhanceAll(); mountPlayers(); killNative(document);
     // Selects que se dibujan después (panel, ventanas)
-    new MutationObserver((ms) => { for (const m of ms) for (const n of m.addedNodes) if (n.nodeType === 1) { if (n.tagName === "SELECT") enhanceSelect(n); else if (n.querySelector) { enhanceAll(n); if (n.classList.contains("tdv")) mountPlayer(n); else mountPlayers(n); } } })
+    new MutationObserver((ms) => { for (const m of ms) for (const n of m.addedNodes) if (n.nodeType === 1) { if (n.tagName === "SELECT") enhanceSelect(n); else if (n.querySelector) { enhanceAll(n); if (n.classList.contains("tdv")) mountPlayer(n); else mountPlayers(n); killNative(n.parentNode || n); } } })
       .observe(document.body, { childList: true, subtree: true });
   });
 })();

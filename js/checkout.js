@@ -125,6 +125,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         notes: v("notes"),
         items: cart.get().map((i) => ({ slug: i.slug, qty: i.qty })),
       });
+      try { const items = cart.get(); TD.track("Purchase", null, 1, { value: items.reduce((a, i) => a + Number(i.price) * i.qty, 0), currency: "PEN", content_ids: items.map((i) => i.slug), content_type: "product", num_items: items.reduce((a, i) => a + i.qty, 0) }); } catch (_) {}
       const keep = {}; F.forEach((k) => (keep[k] = v(k))); Object.assign(keep, { dept: dept.value, prov: prov.value, dist: dist.value });
       localStorage.setItem(SAVE, JSON.stringify(keep));
       sessionStorage.setItem("todotil.last", JSON.stringify({ ...res, last4: phone.slice(-4) }));
