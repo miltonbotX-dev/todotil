@@ -1,6 +1,9 @@
 // Todotil UI · iconos SVG propios (estilo trazo, sin CDN) + ventanas y avisos personalizados.
 (function () {
   const P = {
+    book: '<path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/>',
+    printer: '<path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6"/><rect x="6" y="14" width="12" height="8" rx="1"/>',
+    fileText: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/>',
     packageCheck: '<path d="m16 16 2 2 4-4"/><path d="M21 10V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l2-1.14"/><path d="m7.5 4.27 9 5.15"/><polyline points="3.29 7 12 12 20.71 7"/><line x1="12" x2="12" y1="22" y2="12"/>',
     share: '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.59 13.51 6.83 3.98M15.41 6.51l-6.82 3.98"/>',
     sort: '<path d="m3 16 4 4 4-4M7 20V4M21 8l-4-4-4 4M17 4v16"/>',
@@ -58,6 +61,19 @@
     minimize: '<path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/>',
     help: '<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>',
   };
+  // Cloudflare Turnstile (captcha). Solo se activa si TD_CONFIG.TURNSTILE_SITE_KEY tiene valor; vacío = desactivado.
+  // UI.turnstile(el) -> null si está apagado; si no, { token(), reset() }
+  let tsLoad;
+  function turnstile(el) {
+    const key = (window.TD_CONFIG || {}).TURNSTILE_SITE_KEY;
+    if (!key || !el) return null;
+    el.hidden = false;
+    let tok = "", wid = null;
+    tsLoad ||= new Promise((ok, ko) => { const sc = document.createElement("script"); sc.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"; sc.async = true; sc.onload = ok; sc.onerror = () => ko(new Error("No se pudo cargar la verificación")); document.head.appendChild(sc); });
+    tsLoad.then(() => { wid = window.turnstile.render(el, { sitekey: key, language: "es", theme: "light", size: "flexible",
+      callback: (t) => (tok = t), "expired-callback": () => (tok = ""), "error-callback": () => (tok = "") }); }).catch(() => { el.textContent = "No se pudo cargar la verificación. Recarga la página."; });
+    return { token: () => tok, reset: () => { tok = ""; try { if (wid !== null) window.turnstile.reset(wid); } catch (_) {} } };
+  }
   function icon(name, size = 18, cls = "") {
     return `<svg class="ic ${cls}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[name] || P.info}</svg>`;
   }
@@ -317,7 +333,7 @@
   // Ningún <video> del sitio puede mostrar controles nativos (aunque otro script se los ponga)
   const killNative = (r) => r.querySelectorAll && r.querySelectorAll("video").forEach((x) => { if (x.controls) x.controls = false; x.removeAttribute("controls"); x.disablePictureInPicture = true; x.disableRemotePlayback = true; });
   document.addEventListener("dragstart", (e) => { if (e.target.closest && e.target.closest("video, .tdv, .gal-main, .thumbs")) e.preventDefault(); }, true);
-  window.UI = { player, mountPlayers, icon, hydrate, modal, alert: alertBox, confirm: confirmBox, toast, esc, enhanceSelect, enhanceAll, fieldError, clearFieldError, clearErrors };
+  window.UI = { turnstile, player, mountPlayers, icon, hydrate, modal, alert: alertBox, confirm: confirmBox, toast, esc, enhanceSelect, enhanceAll, fieldError, clearFieldError, clearErrors };
   document.addEventListener("DOMContentLoaded", () => {
     hydrate();
     // Ningún formulario usa las burbujas de validación del navegador

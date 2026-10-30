@@ -7,14 +7,14 @@
 <meta name="robots" content="noindex,nofollow">
 <meta name="theme-color" content="#1D4ED8">
 <link rel="icon" type="image/png" href="../img/favicon-32.png">
-<link rel="stylesheet" href="../css/styles.css?v=8">
-<link rel="stylesheet" href="admin.css?v=8">
-<script src="../js/config.js?v=8" defer></script>
-<script src="../js/ui.js?v=8" defer></script>
-<script src="../js/ubigeo.js?v=8" defer></script>
-<script src="../js/vendor/supabase.js?v=8" defer></script>
-<script src="media.js?v=8" defer></script>
-<script src="admin.js?v=8" defer></script>
+<link rel="stylesheet" href="../css/styles.css?v=9">
+<link rel="stylesheet" href="admin.css?v=9">
+<script src="../js/config.js?v=9" defer></script>
+<script src="../js/ui.js?v=9" defer></script>
+<script src="../js/ubigeo.js?v=9" defer></script>
+<script src="../js/vendor/supabase.js?v=9" defer></script>
+<script src="media.js?v=9" defer></script>
+<script src="admin.js?v=9" defer></script>
 </head>
 <body>
 <header class="top"><div class="wrap"><a class="brand" href="./"><img src="../img/icon.svg" alt=""><span>Todo<b>til</b></span> <small style="color:var(--muted);font-size:13px;font-weight:700">Panel</small></a>
@@ -24,6 +24,7 @@
     <h1 style="margin:0 0 6px;font-size:22px">Ingresar al panel</h1>
     <label for="le">Correo</label><input id="le" type="email" autocomplete="username" required>
     <label for="lp">Contraseña</label><input id="lp" type="password" autocomplete="current-password" required>
+    <div id="lts" class="ts-box" hidden></div>
     <div id="lerr" class="err" hidden></div>
     <div style="margin-top:14px"><button class="btn btn-blue" id="lbtn">Ingresar</button></div>
     <p style="text-align:center;margin:12px 0 0"><a href="#" id="forgot">Olvidé mi contraseña</a></p>
@@ -44,6 +45,7 @@
       <button class="tab" data-t="products"><i data-ic="box"></i><span>Productos</span></button>
       <button class="tab" data-t="suppliers"><i data-ic="store"></i><span>Proveedores</span></button>
       <button class="tab" data-t="shipping" hidden><i data-ic="truck"></i><span>Envíos</span></button>
+      <button class="tab" data-t="complaints"><i data-ic="book"></i><span>Reclamos</span><span class="pill" id="lrCount" hidden>0</span></button>
       <button class="tab" data-t="settings"><i data-ic="settings"></i><span>Ajustes</span></button>
     </div>
     <div id="t-orders"><div class="stats" id="stats"></div><div class="chips" id="sf" style="margin:10px 0"></div><div id="olist"></div></div>
@@ -54,6 +56,9 @@
     <div id="t-shipping" hidden><div class="bar"><h2>Tarifas de envío</h2><button class="btn btn-main sm" id="newR"><i data-ic="plus"></i>Nueva tarifa</button></div>
       <div class="note" style="margin-bottom:10px"><i data-ic="info"></i><span>Se usa la tarifa más específica (distrito &gt; provincia &gt; departamento) que calce con la cantidad de unidades. Si no hay ninguna, se cobra la tarifa general de Ajustes (Lima/Callao o provincias). Cada paquete (proveedor) paga su envío.</span></div>
       <div id="rlist"></div></div>
+    <div id="t-complaints" hidden><div class="bar"><h2>Libro de Reclamaciones</h2></div>
+      <div class="note" style="margin-bottom:10px"><i data-ic="info"></i><span>Responde cada hoja en un plazo máximo de 15 días hábiles (al correo o teléfono del consumidor) y registra aquí la respuesta. Las hojas no se pueden borrar.</span></div>
+      <div id="lrlist"></div></div>
     <div id="t-settings" hidden></div>
   </section>
 </main>

@@ -19,7 +19,7 @@
   async function boot() {
     const { data: { session } } = await sb.auth.getSession();
     $("#outBtn").hidden = !session;
-    if (!session) return show("login");
+    if (!session) { if (!lts) lts = UI.turnstile($("#lts")); return show("login"); }
     if (location.hash.includes("access_token")) history.replaceState(null, "", location.pathname);
     if (sessionStorage.getItem("todotil.needpw")) { $("#pwEmail").textContent = session.user.email || ""; return show("setpw"); }
     const { data: isAdmin } = await sb.rpc("is_admin");
@@ -30,19 +30,24 @@
     }
     show("app");
     if ("Notification" in window && Notification.permission === "default") $("#notifBtn").hidden = false;
-    await Promise.all([loadOrders(), loadSuppliers(), loadProducts()]);
+    await Promise.all([loadOrders(), loadSuppliers(), loadProducts(), loadComplaints()]);
     listen();
   }
 
   // ---------- Auth ----------
+  // Captcha (Turnstile) en el login: solo si TURNSTILE_SITE_KEY tiene valor. Requiere activar CAPTCHA en Supabase Auth con el Secret Key.
+  let lts = null;
+  const needTs = () => { if (lts && !lts.token()) { $("#lerr").textContent = "Marca la casilla de verificación"; $("#lerr").hidden = false; return true; } return false; };
+  const tsOpt = () => (lts ? { captchaToken: lts.token() } : {});
   $("#lf").addEventListener("submit", async (e) => {
     e.preventDefault(); $("#lerr").hidden = true; UI.clearErrors($("#lf"));
     const okE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test($("#le").value.trim()), okP = !!$("#lp").value;
     if (!okE) UI.fieldError("le", "Escribe tu correo"); if (!okP) UI.fieldError("lp", "Escribe tu contraseña");
     if (!okE || !okP) return (okE ? $("#lp") : $("#le")).focus();
+    if (needTs()) return;
     $("#lbtn").disabled = true;
-    const { error } = await sb.auth.signInWithPassword({ email: $("#le").value.trim(), password: $("#lp").value });
-    $("#lbtn").disabled = false;
+    const { error } = await sb.auth.signInWithPassword({ email: $("#le").value.trim(), password: $("#lp").value, options: tsOpt() });
+    $("#lbtn").disabled = false; if (lts) lts.reset();
     if (error) { $("#lerr").textContent = "Correo o contraseña incorrectos"; $("#lerr").hidden = false; return; }
     $("#lp").value = ""; boot();
   });
@@ -60,14 +65,15 @@
   $("#forgot").onclick = async (e) => {
     e.preventDefault(); const email = $("#le").value.trim();
     if (!email) { $("#lerr").textContent = "Escribe tu correo primero"; $("#lerr").hidden = false; return; }
-    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
+    if (needTs()) return;
+    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname, ...tsOpt() }); if (lts) lts.reset();
     $("#lerr").textContent = error ? error.message : "Te enviamos un correo para crear una nueva contraseña"; $("#lerr").hidden = false;
   };
   $("#outBtn").onclick = async () => { await sb.auth.signOut(); if (channel) sb.removeChannel(channel); location.reload(); };
   $("#notifBtn").onclick = async () => { await Notification.requestPermission(); $("#notifBtn").hidden = Notification.permission !== "default"; beep(); };
 
   // ---------- Tabs ----------
-  const TABS = ["orders", "products", "suppliers", "shipping", "settings"];
+  const TABS = ["orders", "products", "suppliers", "shipping", "complaints", "settings"];
   document.querySelector(".tabs").addEventListener("click", (e) => {
     const b = e.target.closest(".tab"); if (!b) return;
     document.querySelectorAll(".tabs .tab").forEach((x) => x.classList.toggle("on", x === b));
@@ -75,6 +81,7 @@
     if (b.dataset.t === "settings") drawSettings();
     if (b.dataset.t === "shipping") loadRates();
     if (b.dataset.t === "suppliers") loadSuppliers();
+    if (b.dataset.t === "complaints") loadComplaints();
   });
   const dlg = $("#dlg");
   const openDlg = (html) => { $("#dlgBody").innerHTML = html; if (!dlg.open) dlg.showModal(); };
@@ -452,6 +459,41 @@
     };
   }
 
+  // ---------- Libro de Reclamaciones ----------
+  let complaints = [];
+  // días hábiles (lun–vie) transcurridos desde d; no descuenta feriados
+  const bizDays = (d) => { let n = 0; const x = new Date(d), t = new Date(); x.setHours(0, 0, 0, 0); while (x < t) { x.setDate(x.getDate() + 1); const w = x.getDay(); if (w && w !== 6 && x <= t) n++; } return n; };
+  async function loadComplaints() {
+    const { data, error } = await sb.from("complaints").select("*").order("created_at", { ascending: false }).limit(200);
+    if (error) return; complaints = data || [];
+    const pend = complaints.filter((c) => c.status === "pendiente").length;
+    $("#lrCount").textContent = pend; $("#lrCount").hidden = !pend;
+    const box = $("#lrlist");
+    box.innerHTML = complaints.length ? complaints.map((c) => { const d = bizDays(c.created_at);
+      return `<div class="panel" style="margin-bottom:8px;cursor:pointer" data-lr="${c.id}"><b>${esc(c.code)}</b> · ${c.kind === "queja" ? "Queja" : "Reclamo"} · ${esc(c.consumer_name)}
+        <div style="font-size:13px;color:var(--muted)">${fmt(c.created_at)}${c.order_code ? " · " + esc(c.order_code) : ""} · ${c.status === "respondido" ? "Respondido" : `<b style="color:${d >= 12 ? "var(--bad)" : "inherit"}">Pendiente · ${d} de 15 días hábiles</b>`}</div></div>`; }).join("")
+      : '<div class="panel" style="color:var(--muted)">Aún no hay hojas de reclamación.</div>';
+  }
+  $("#lrlist") && $("#lrlist").addEventListener("click", (e) => {
+    const el = e.target.closest("[data-lr]"); if (!el) return;
+    const c = complaints.find((x) => x.id === el.dataset.lr); if (!c) return;
+    const r = (k, v) => v ? `<div><b>${k}:</b> ${esc(v)}</div>` : "";
+    openDlg(`<h2 style="margin-top:0">${esc(c.code)} · ${c.kind === "queja" ? "Queja" : "Reclamo"}</h2>
+      ${r("Fecha", fmt(c.created_at))}${r("Consumidor", c.consumer_name)}${r(c.doc_type, c.doc_number)}${r("Domicilio", c.address)}${r("Teléfono", c.phone)}${r("Correo", c.email)}
+      ${c.is_minor ? r("Representante", [c.guardian_name, c.guardian_doc, c.guardian_phone, c.guardian_email].filter(Boolean).join(" · ")) : ""}
+      ${r("Bien", (c.good_type === "servicio" ? "Servicio" : "Producto") + " · " + c.good_description)}${r("Pedido", c.order_code)}${r("Monto", c.amount != null ? money(c.amount) : "")}
+      ${r("Detalle", c.detail)}${r("Pedido del consumidor", c.request)}
+      <label>Respuesta / acciones adoptadas</label><textarea id="lrResp" rows="4">${esc(c.response || "")}</textarea>
+      ${c.response_at ? `<p class="hint">Respondido el ${fmt(c.response_at)}</p>` : ""}
+      <div style="display:flex;gap:8px;margin-top:12px"><button class="btn btn-main" id="lrSave">${ic("check")} Guardar respuesta</button><button class="btn btn-ghost" id="lrClose">Cerrar</button></div>`);
+    $("#lrClose").onclick = () => dlg.close();
+    $("#lrSave").onclick = async () => {
+      const { error } = await sb.rpc("admin_answer_complaint", { p_id: c.id, p_response: $("#lrResp").value });
+      if (error) return fail(error);
+      dlg.close(); UI.toast("Respuesta guardada"); loadComplaints();
+    };
+  });
+
   // ---------- Ajustes ----------
   async function drawSettings() {
     const { data: s, error } = await sb.from("app_settings").select("*").eq("id", 1).single();
@@ -463,6 +505,13 @@
       <div hidden><div class="row2"><div><label>Envío general Lima/Callao S/</label><input id="s_fl" type="number" step="0.5" value="${s.shipping_fee_lima}"></div>
       <div><label>Envío general provincias S/</label><input id="s_fp" type="number" step="0.5" value="${s.shipping_fee_provincia}"></div></div>
       <p class="hint" style="margin:6px 0 0">Se usa cuando no hay una tarifa en la pestaña Envíos. Se cobra por paquete (proveedor).</p></div>
+      <h3 style="margin:16px 0 0;font-size:16px">Datos del negocio <small style="color:var(--muted)">(Libro de Reclamaciones y Privacidad)</small></h3>
+      ${!s.legal_name || !s.ruc || !s.legal_address ? `<div class="warn">${ic("alert", 18)}<span>Faltan datos obligatorios para el Libro de Reclamaciones: ${[!s.legal_name && "nombre o razón social", !s.ruc && "RUC", !s.legal_address && "dirección"].filter(Boolean).join(", ")}.</span></div>` : ""}
+      <label>Nombre o razón social</label><input id="s_ln" value="${esc(s.legal_name || "")}">
+      <div class="row2"><div><label>RUC</label><input id="s_ruc" inputmode="numeric" maxlength="11" value="${esc(s.ruc || "")}"></div>
+      <div><label>Correo de contacto</label><input id="s_ce" type="email" value="${esc(s.contact_email || "")}"></div></div>
+      <label>Dirección (domicilio fiscal)</label><input id="s_la" value="${esc(s.legal_address || "")}">
+      <label>Horario de atención <small>(ej. Lunes a sábado de 9:00 a 18:00)</small></label><input id="s_bh" value="${esc(s.business_hours || "")}">
       <label>Texto de envío</label><textarea id="s_ship" rows="2">${esc(s.shipping_text || "")}</textarea>
       <label>Medios de pago</label><textarea id="s_pay" rows="2">${esc(s.payment_text || "")}</textarea>
       <label>Cambio si llega dañado (texto principal)</label><textarea id="s_war" rows="5">${esc(s.warranty_text || "")}</textarea>
@@ -471,8 +520,11 @@
     $("#sSave").onclick = async () => {
       const w = $("#s_whatsapp").value.replace(/\D/g, "");
       if (w && !/^519\d{8}$/.test(w)) return UI.alert("El WhatsApp debe ser 51 + 9 dígitos (ej. 51987654321).", { title: "Revisa el número", tone: "warn" });
+      const ruc = $("#s_ruc").value.replace(/\D/g, "");
+      if (ruc && !/^(10|15|17|20)\d{9}$/.test(ruc)) return UI.alert("El RUC tiene 11 dígitos y empieza con 10 o 20.", { title: "Revisa el RUC", tone: "warn" });
       const { error } = await sb.from("app_settings").update({ whatsapp: w || null, shipping_fee_lima: Number($("#s_fl").value) || 0, shipping_fee_provincia: Number($("#s_fp").value) || 0,
-        shipping_text: $("#s_ship").value.trim() || null, payment_text: $("#s_pay").value.trim() || null, warranty_text: $("#s_war").value.trim() || null, policies_text: $("#s_pol").value.trim() || null }).eq("id", 1);
+        shipping_text: $("#s_ship").value.trim() || null, payment_text: $("#s_pay").value.trim() || null, warranty_text: $("#s_war").value.trim() || null, policies_text: $("#s_pol").value.trim() || null,
+        legal_name: $("#s_ln").value.trim() || null, ruc: ruc || null, legal_address: $("#s_la").value.trim() || null, business_hours: $("#s_bh").value.trim() || null, contact_email: $("#s_ce").value.trim() || null }).eq("id", 1);
       if (error) return fail(error);
       UI.toast("Ajustes guardados");
     };

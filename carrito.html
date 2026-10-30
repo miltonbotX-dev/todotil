@@ -19,13 +19,13 @@
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://gywaofxlixdzcexvdafo.supabase.co">
 <link rel="preload" href="fonts/nunito.woff" as="font" type="font/woff" crossorigin>
-<link rel="stylesheet" href="css/styles.css?v=8">
-<script src="js/config.js?v=8" defer></script>
-<script src="js/ui.js?v=8" defer></script>
-<script src="js/app.js?v=8" defer></script>
+<link rel="stylesheet" href="css/styles.css?v=9">
+<script src="js/config.js?v=9" defer></script>
+<script src="js/ui.js?v=9" defer></script>
+<script src="js/app.js?v=9" defer></script>
 <meta name="robots" content="noindex">
-<script src="js/ubigeo.js?v=8" defer></script>
-<script src="js/checkout.js?v=8" defer></script>
+<script src="js/ubigeo.js?v=9" defer></script>
+<script src="js/checkout.js?v=9" defer></script>
 </head>
 <body>
 <header class="top" id="top"></header>
@@ -44,6 +44,7 @@
     <label for="dept">Departamento</label><select id="dept" required></select>
     <label for="prov">Provincia</label><select id="prov" required></select>
     <label for="dist">Distrito</label><select id="dist" required></select>
+    <div class="eta" id="etaBox" style="margin-top:10px"></div>
     <label for="addr">Dirección</label><input id="addr" autocomplete="street-address" placeholder="Av./Jr./Calle, número, dpto." required maxlength="200">
     <label for="ref">Referencia <small>(ayuda al motorizado)</small></label><input id="ref" placeholder="Ej. frente al parque, puerta verde" maxlength="200">
     <div class="row2">
@@ -51,6 +52,7 @@
       <div><label for="email">Correo <small>(opcional)</small></label><input id="email" type="email" autocomplete="email" maxlength="120"></div>
     </div>
     <label for="notes">Notas <small>(opcional)</small></label><textarea id="notes" rows="2" maxlength="500" placeholder="Horario para recibir, etc."></textarea>
+    <div id="tsBox" class="ts-box" hidden></div>
     <div id="err" class="err" hidden></div>
     <div style="margin-top:16px"><button class="btn btn-main" id="send" type="submit">Confirmar pedido · pago contra entrega</button></div>
     <p style="font-size:12.5px;color:var(--muted);text-align:center;margin:10px 0 0">Al confirmar aceptas que te contactemos por WhatsApp para coordinar la entrega. <a href="politicas.html">Cambios y envíos</a></p>

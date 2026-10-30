@@ -23,6 +23,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         <div><span class="price">${money(p.price)}</span>${p.compare_at_price ? `<span class="was">Antes ${money(p.compare_at_price)}</span>` : ""}<span class="save" id="save" hidden></span></div>
         ${p.stock_hint != null && p.stock_hint > 0 && p.stock_hint <= 15 ? `<div class="low" style="margin-top:4px">¡Quedan pocas unidades!</div>` : ""}
         ${p.short_description ? `<p style="margin:8px 0 0;font-weight:700">${esc(p.short_description)}</p>` : ""}</div>
+      <div class="eta" id="eta">${ic("truck", 20)}<span>Llega en <b>${TD.etaTxt(TD.ETA.lima)}</b> en Lima y Callao · <b>${TD.ETA.prov.min} a ${TD.ETA.prov.max}</b> en provincias <small>Tiempo aproximado. Te confirmamos la fecha de entrega por WhatsApp. <a href="politicas.html#entregas">Ver tiempos por zona</a></small></span></div>
       <div style="display:flex;align-items:center;gap:12px"><b>Cantidad</b>
         <div class="qty"><button type="button" id="qm" aria-label="Menos">−</button><span id="qv">1</span><button type="button" id="qp" aria-label="Más">+</button></div></div>
       <div class="sticky-buy">
@@ -40,7 +41,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       ${p.long_description ? `<div><h2 style="font-size:18px;margin:6px 0 6px">Descripción</h2><div class="desc">${esc(p.long_description)}</div></div>` : ""}
       <div><h2 style="font-size:18px;margin:6px 0 8px">Preguntas frecuentes</h2><div class="faq">
         <details><summary>¿Cómo pago?</summary><p>Pagas en efectivo cuando el producto llega a tu puerta. No pedimos adelantos ni datos de tarjeta.</p></details>
-        <details><summary>¿Cuánto cuesta el envío y cuánto demora?</summary><p>Después de tu pedido te escribimos por WhatsApp para confirmar el costo de envío a tu distrito y la fecha estimada de entrega.</p></details>
+        <details><summary>¿Cuánto demora en llegar?</summary><p>Aproximadamente <b>${TD.etaTxt(TD.ETA.lima)}</b> en Lima Metropolitana y Callao, <b>${TD.etaTxt(TD.ETA.limaProv)}</b> en Lima provincias y <b>${TD.etaTxt(TD.ETA.prov)}</b> en otras regiones. Las zonas alejadas o rurales pueden tardar más. Contamos desde que confirmamos tu pedido por WhatsApp.</p></details>
+        <details><summary>¿Cuánto cuesta el envío?</summary><p>Depende de tu distrito. Después de tu pedido te escribimos por WhatsApp para confirmar el costo de envío y la fecha estimada de entrega, antes del despacho.</p></details>
         <details><summary>¿Y si llega dañado o no es lo que pedí?</summary><p>Revisa tu pedido al recibirlo. Si llega dañado, incompleto o no es lo que pediste, escríbenos por WhatsApp dentro de las 48 horas con fotos y te lo cambiamos. <a href="politicas.html">Ver cambios y envíos</a>.</p></details>
         <details><summary>¿Puedo pedir por WhatsApp?</summary><p>¡Claro! Toca el botón verde de WhatsApp y te atendemos personalmente.</p></details>
       </div></div>

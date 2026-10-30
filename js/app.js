@@ -18,18 +18,44 @@
     return data;
   }
 
+  async function fn(name, body) {
+    const r = await fetch(C.SUPABASE_URL + "/functions/v1/" + name, { method: "POST", headers: H, body: JSON.stringify(body) });
+    const data = await r.json().catch(() => null);
+    if (!r.ok) throw new Error((data && (data.message || data.error)) || "Ocurrió un error. Inténtalo otra vez.");
+    return data;
+  }
+
   const PCOLS = "id,slug,name,short_description,long_description,price,compare_at_price,images,videos,video_url,category,featured,stock_hint,sort,supplier_id,is_combo";
   const api = {
     products: () => rest("products?select=" + PCOLS + "&active=eq.true&order=sort.asc,name.asc"),
     product: (slug) => rest("products?select=" + PCOLS + "&active=eq.true&slug=eq." + encodeURIComponent(slug)).then((a) => a[0] || null),
     categories: () => rest("categories?select=slug,name&active=eq.true&order=sort.asc"),
     settings: (() => { let p; return () => (p ||= rest("app_settings?select=*&id=eq.1").then((a) => a[0] || {}).catch(() => ({}))); })(),
-    createOrder: (payload) => rpc("create_order", { payload }),
+    // Con Turnstile activo el pedido pasa por la Edge Function create-order (verifica el captcha en el servidor).
+    createOrder: (payload, captcha) => captcha ? fn("create-order", { payload, turnstile_token: captcha }) : rpc("create_order", { payload }),
     quote: (payload) => rpc("quote_cart", { payload }),
     comboItems: (id) => rest("combo_items?select=qty,product_id&combo_id=eq." + encodeURIComponent(id)),
     productsByIds: (ids) => rest("products?select=id,slug,name,images,price&id=in.(" + ids.map(encodeURIComponent).join(",") + ")"),
     track: (code, last4) => rpc("get_order_status", { p_code: code, p_phone_last4: last4 }),
+    submitComplaint: (payload) => rpc("submit_complaint", { payload }),
   };
+
+  // Tiempos de entrega APROXIMADOS en días hábiles, contados desde que confirmamos el pedido por WhatsApp.
+  // Base: Dropi Perú (24–72 h según transportadora y zona) y tabla oficial de Olva (Lima/Callao 24–48 h; capitales 1–3 días).
+  const ETA = {
+    lima: { min: 1, max: 3, zone: "Lima Metropolitana y Callao" },
+    limaProv: { min: 2, max: 5, zone: "Lima provincias" },
+    prov: { min: 3, max: 7, zone: "otras regiones del Perú" },
+  };
+  // eta("Lima","Lima") -> lima · eta("Lima","Cañete") -> limaProv · eta("Callao") -> lima · resto -> prov
+  function eta(dep, prov) {
+    const d = String(dep || "").trim(), pv = String(prov || "").trim();
+    if (!d) return null;
+    if (d === "Callao" || (d === "Lima" && (pv === "Lima" || !pv))) return ETA.lima;
+    if (d === "Lima") return ETA.limaProv;
+    return ETA.prov;
+  }
+  const etaTxt = (e) => `${e.min} a ${e.max} días hábiles`;
 
   // Carrito en localStorage: [{slug, qty, name, price, image}] (precio solo para mostrar; el servidor recalcula)
   const KEY = "todotil.cart.v1";
@@ -98,7 +124,9 @@
     el.innerHTML = `<div class="wrap cols">
       <div class="brand" style="color:#fff"><img src="img/icon.svg" alt=""><span>Todo<b>til</b></span></div>
       <div>${esc(s.tagline || "Lo útil, al mejor precio · Pago contra entrega")}</div>
-      <div><a href="seguimiento.html">Sigue tu pedido</a> · <a href="politicas.html">Cambios y envíos</a>${wa ? ` · <a href="${wa}" target="_blank" rel="noopener">WhatsApp</a>` : ""}</div>
+      <div class="foot-links"><a href="como-comprar.html">Cómo comprar</a> · <a href="seguimiento.html">Sigue tu pedido</a> · <a href="politicas.html">Cambios y envíos</a> · <a href="privacidad.html">Privacidad</a>${wa ? ` · <a href="${wa}" target="_blank" rel="noopener">WhatsApp</a>` : ""}</div>
+      ${s.business_hours ? `<div>${ic("clock", 15)} Atención: ${esc(s.business_hours)}</div>` : ""}
+      <a class="foot-lr" href="libro-reclamaciones.html">${ic("book", 22)}<span>Libro de Reclamaciones</span></a>
       ${wa ? `<a class="foot-wa" href="${wa}" target="_blank" rel="noopener">${waIcon(20)}<span>¿Dudas? Te atendemos por WhatsApp: <b>${waPretty(s)}</b></span></a>` : ""}
       <div style="opacity:.7">Todotil · Perú</div></div>`;
   }
@@ -119,6 +147,6 @@
       fbq("track", ev, Object.assign(d, extra));
     } catch (_) {}
   }
-  window.TD = { track, $, esc, money, api, cart, waLink, waIcon, setWaText, toast, ic, cardHTML, header, footer, STATUS };
+  window.TD = { eta, etaTxt, ETA, track, $, esc, money, api, cart, waLink, waIcon, setWaText, toast, ic, cardHTML, header, footer, STATUS };
   document.addEventListener("DOMContentLoaded", () => { header(); footer(); waFab(); });
 })();

@@ -28,8 +28,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     dist.disabled = !prov.value;
     if (keep && D.includes(keep)) dist.value = keep;
   }
-  dept.onchange = () => { fillProv(); fillDist(); quote(); };
-  prov.onchange = () => { fillDist(); quote(); };
+  // ---- Tiempo de entrega aproximado según departamento/provincia ----
+  function drawEta() {
+    const e = TD.eta(dept.value, prov.value), box = $("#etaBox");
+    box.innerHTML = e
+      ? `${ic("truck", 20)}<span>Llega en <b>${TD.etaTxt(e)}</b> aprox. a ${esc(dept.value === "Lima" && prov.value && prov.value !== "Lima" ? prov.value : dept.value)} <small>${esc(e.zone[0].toUpperCase() + e.zone.slice(1))}. Contamos desde que confirmamos tu pedido por WhatsApp; zonas alejadas pueden tardar más.</small></span>`
+      : `${ic("truck", 20)}<span>Lima y Callao: <b>${TD.etaTxt(TD.ETA.lima)}</b> · Provincias: <b>${TD.ETA.prov.min} a ${TD.ETA.prov.max}</b> <small>Elige tu departamento para ver el tiempo aproximado.</small></span>`;
+    const r = $("#etaRow"); if (r) r.textContent = e ? TD.etaTxt(e) + " (aprox.)" : "Elige tu departamento";
+  }
+  dept.onchange = () => { fillProv(); fillDist(); drawEta(); quote(); };
+  prov.onchange = () => { fillDist(); drawEta(); quote(); };
   dist.onchange = () => quote();
 
   // ---- Cotización en el servidor (envío por paquete/proveedor) ----
@@ -65,9 +73,10 @@ document.addEventListener("DOMContentLoaded", async () => {
           <div class="sum"><span>Envío${p.days ? " · " + esc(p.days) : ""}</span><b>${waShip ? "Por WhatsApp" : haveDest ? money(p.shipping) : "—"}</b></div></div>`).join("")}</div>` : ""}
       <div style="padding-top:8px"><div class="sum"><span>Subtotal</span><b>${money(Q ? Q.subtotal : sub)}</b></div>
       <div class="sum"><span>Envío${pk.length > 1 ? ` (${pk.length} paquetes)` : ""}</span><b id="shipAmt">${shipTxt}</b></div>
+      <div class="sum"><span>${ic("truck", 15)} Entrega estimada</span><b id="etaRow"></b></div>
       <div class="sum total"><span>${waShip ? "Total productos" : "Total a pagar al recibir"}</span><span>${money(Q && (haveDest || waShip) ? Q.total : sub)}</span></div>
       ${waShip ? `<div class="note" id="shipNote" style="margin-top:8px">${ic("info", 18)}<span>El costo de envío no está incluido: <b>te lo confirmamos por WhatsApp antes del despacho</b>, según tu distrito.</span></div>${waUrl ? `<a class="btn btn-wa" id="waShip" style="margin-top:8px" target="_blank" rel="noopener" href="${esc(waUrl)}">${TD.waIcon(20)} Consultar envío por WhatsApp</a>` : ""}` : haveDest ? "" : '<div style="font-size:13px;color:var(--muted)">El costo de envío se calcula según tu distrito.</div>'}</div></div>`;
-    form.hidden = false;
+    form.hidden = false; drawEta();
   }
   $("#cartBox").addEventListener("click", (e) => {
     const b = e.target.closest("button[data-a]"); if (!b) return;
@@ -86,6 +95,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     fillProv(sv.prov); fillDist(sv.dist);
   } catch { fillProv(); fillDist(); }
 
+  const ts = UI.turnstile($("#tsBox")); // null = captcha desactivado (TURNSTILE_SITE_KEY vacío)
   if (location.hash === "#datos") setTimeout(() => form.scrollIntoView({ behavior: "smooth" }), 200);
 
   form.addEventListener("submit", async (e) => {
@@ -112,6 +122,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       t.scrollIntoView({ behavior: "smooth", block: "center" }); setTimeout(() => first.focus({ preventScroll: true }), 250);
       return;
     }
+    if (ts && !ts.token()) { fail("Marca la casilla de verificación antes de confirmar"); $("#tsBox").scrollIntoView({ behavior: "smooth", block: "center" }); return; }
     const pk = (Q && Q.packages) || [];
     if (pk.length > 1) {
       const ok = await UI.confirm(`Tus productos salen de ${pk.length} almacenes distintos, así que llegarán en ${pk.length} paquetes separados, cada uno con su envío${Number(Q.shipping) > 0 ? ` (total envío ${money(Q.shipping)})` : " (se confirma por WhatsApp)"}.`, { title: "Tu pedido llega por partes", ok: "Entendido, confirmar", cancel: "Revisar" });
@@ -124,14 +135,14 @@ document.addEventListener("DOMContentLoaded", async () => {
         shipping: { department: dept.value, province: prov.value, district: dist.value, address: v("addr"), reference: v("ref") },
         notes: v("notes"),
         items: cart.get().map((i) => ({ slug: i.slug, qty: i.qty })),
-      });
+      }, ts ? ts.token() : null);
       try { const items = cart.get(); TD.track("Purchase", null, 1, { value: items.reduce((a, i) => a + Number(i.price) * i.qty, 0), currency: "PEN", content_ids: items.map((i) => i.slug), content_type: "product", num_items: items.reduce((a, i) => a + i.qty, 0) }); } catch (_) {}
       const keep = {}; F.forEach((k) => (keep[k] = v(k))); Object.assign(keep, { dept: dept.value, prov: prov.value, dist: dist.value });
       localStorage.setItem(SAVE, JSON.stringify(keep));
       sessionStorage.setItem("todotil.last", JSON.stringify({ ...res, last4: phone.slice(-4) }));
       cart.clear();
       location.href = "gracias.html?c=" + encodeURIComponent(res.public_code);
-    } catch (ex) { fail(ex.message); btn.disabled = false; btn.textContent = "Confirmar pedido · pago contra entrega"; }
+    } catch (ex) { if (ts) ts.reset(); fail(ex.message); btn.disabled = false; btn.textContent = "Confirmar pedido · pago contra entrega"; }
   });
   drawCart(); quote();
 });

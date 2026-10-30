@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="es-PE">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Libro de Reclamaciones · Todotil</title>
+<meta name="description" content="Libro de Reclamaciones virtual de Todotil. Registra tu reclamo o queja; te respondemos en un plazo no mayor a 15 días hábiles.">
+<meta name="theme-color" content="#1D4ED8">
+<link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32.png">
+<link rel="icon" type="image/svg+xml" href="img/icon.svg">
+<link rel="apple-touch-icon" href="img/icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Todotil">
+<meta property="og:title" content="Libro de Reclamaciones · Todotil">
+<meta property="og:description" content="Libro de Reclamaciones virtual de Todotil. Registra tu reclamo o queja; te respondemos en un plazo no mayor a 15 días hábiles.">
+<meta property="og:image" content="https://miltonbotx-dev.github.io/todotil/img/cover-facebook.png">
+<meta property="og:locale" content="es_PE">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://gywaofxlixdzcexvdafo.supabase.co">
+<link rel="preload" href="fonts/nunito.woff" as="font" type="font/woff" crossorigin>
+<link rel="stylesheet" href="css/styles.css?v=9">
+<script src="js/config.js?v=9" defer></script>
+<script src="js/ui.js?v=9" defer></script>
+<script src="js/app.js?v=9" defer></script>
+<script src="js/reclamos.js?v=9" defer></script>
+</head>
+<body>
+<header class="top" id="top"></header>
+<main class="wrap" style="padding:20px 16px 40px;max-width:720px">
+  <h1 style="font-size:23px;display:flex;gap:10px;align-items:center"><i data-ic="book" data-size="26"></i> Libro de Reclamaciones</h1>
+  <div id="lrBox">
+  <div class="panel stack lr">
+    <div class="kv" id="prov"></div>
+    <div class="kv"><b>Fecha</b><span id="today"></span><b>Hoja Nº</b><span style="color:var(--muted)">Se asigna al enviar</span></div>
+  </div>
+  <form id="lrForm" class="panel lr" style="margin-top:14px" novalidate autocomplete="on">
+    <fieldset><legend>1. Tus datos (consumidor reclamante)</legend>
+      <label for="cn">Nombre completo</label><input id="cn" autocomplete="name" maxlength="120" required>
+      <div class="row2">
+        <div><label for="dt">Documento</label><select id="dt"><option>DNI</option><option value="CE">Carné de extranjería</option><option>Pasaporte</option></select></div>
+        <div><label for="dn">Número</label><input id="dn" inputmode="numeric" maxlength="15" required></div>
+      </div>
+      <label for="ad">Domicilio</label><input id="ad" autocomplete="street-address" maxlength="250" placeholder="Dirección, distrito, provincia" required>
+      <div class="row2">
+        <div><label for="ph">Teléfono / celular</label><input id="ph" type="tel" inputmode="numeric" autocomplete="tel-national" maxlength="11" required></div>
+        <div><label for="em">Correo electrónico</label><input id="em" type="email" autocomplete="email" maxlength="120" required></div>
+      </div>
+      <label class="chk"><input type="checkbox" id="mi"> <span>Soy menor de edad</span></label>
+      <div id="gBox" hidden>
+        <p style="margin:10px 0 0;font-weight:700">Datos del padre, madre o representante</p>
+        <label for="gn">Nombre completo</label><input id="gn" maxlength="120">
+        <div class="row2"><div><label for="gd">DNI / CE</label><input id="gd" inputmode="numeric" maxlength="15"></div>
+        <div><label for="gp">Teléfono</label><input id="gp" type="tel" inputmode="numeric" maxlength="11"></div></div>
+        <label for="ge">Correo <small>(opcional)</small></label><input id="ge" type="email" maxlength="120">
+        <label for="ga">Domicilio <small>(opcional)</small></label><input id="ga" maxlength="250">
+      </div>
+    </fieldset>
+    <fieldset><legend>2. Bien contratado</legend>
+      <div class="opts"><label><input type="radio" name="gt" value="producto" checked> Producto</label><label><input type="radio" name="gt" value="servicio"> Servicio</label></div>
+      <div class="row2">
+        <div><label for="oc">Código de pedido <small>(si lo tienes)</small></label><input id="oc" maxlength="20" placeholder="TD-XXXXX" autocapitalize="characters"></div>
+        <div><label for="am">Monto reclamado S/ <small>(opcional)</small></label><input id="am" inputmode="decimal" maxlength="10" placeholder="0.00"></div>
+      </div>
+      <label for="gdsc">Descripción del producto o servicio</label><input id="gdsc" maxlength="300" placeholder="Ej. Apolo estimulante de barba x2" required>
+    </fieldset>
+    <fieldset><legend>3. Detalle de la reclamación y pedido</legend>
+      <div class="opts"><label><input type="radio" name="kd" value="reclamo"> Reclamo</label><label><input type="radio" name="kd" value="queja"> Queja</label></div>
+      <p style="font-size:13px;color:var(--muted);margin:8px 0 0"><b>Reclamo:</b> disconformidad relacionada con los productos o servicios. <b>Queja:</b> disconformidad no relacionada con los productos o servicios, o malestar respecto a la atención al público.</p>
+      <label for="de">Detalle</label><textarea id="de" rows="4" maxlength="3000" required placeholder="Cuéntanos qué pasó"></textarea>
+      <label for="rq">Pedido <small>(qué solución esperas)</small></label><textarea id="rq" rows="2" maxlength="1500" required placeholder="Ej. cambio del producto, devolución, etc."></textarea>
+    </fieldset>
+    <label class="chk"><input type="checkbox" id="ok"> <span>Declaro que la información es verdadera y estoy conforme con el contenido de esta hoja de reclamación.</span></label>
+    <div id="tsLR" class="ts-box" hidden></div>
+    <div id="err" class="err" hidden></div>
+    <div style="margin-top:14px"><button class="btn btn-main" id="send" type="submit">Enviar hoja de reclamación</button></div>
+  </form>
+  </div>
+  <div class="panel" style="margin-top:14px;font-size:13.5px;color:var(--muted)">
+    <p style="margin:0 0 6px">La formulación del reclamo no impide acudir a otras vías de solución de controversias ni es requisito previo para interponer una denuncia ante el INDECOPI.</p>
+    <p style="margin:0 0 6px">El proveedor debe dar respuesta al reclamo o queja en un plazo no mayor a <b>quince (15) días hábiles</b>.</p>
+    <p style="margin:0">Tus datos se usan solo para atender tu reclamo. <a href="privacidad.html">Política de privacidad</a>.</p>
+  </div>
+</main>
+<footer id="foot"></footer>
+</body></html>

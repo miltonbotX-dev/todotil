@@ -241,3 +241,24 @@ html,body{touch-action:manipulation;-webkit-text-size-adjust:100%;text-size-adju
 body{overscroll-behavior-x:none}
 input,select,textarea,.tp-search input,.srch input{font-size:16px!important}
 img,video,iframe{max-width:100%}
+/* v9 · tiempos de entrega, libro de reclamaciones, páginas informativas */
+.eta{display:flex;gap:10px;align-items:flex-start;background:#ECFDF5;color:#065F46;border-radius:12px;padding:10px 12px;font-size:14.5px;line-height:1.35}
+.eta .ic{flex:none;margin-top:1px}.eta small{display:block;font-size:12.5px;opacity:.85;font-weight:600}
+.eta b{font-weight:800}
+.foot-links{line-height:1.9}
+.foot-lr{display:inline-flex;align-items:center;gap:8px;border:1.5px solid #fff;color:#fff;border-radius:10px;padding:8px 12px;width:fit-content;text-decoration:none}
+.tbl{width:100%;border-collapse:collapse;font-size:14px}.tbl th,.tbl td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}.tbl th{font-size:13px;color:var(--muted)}
+.steps{counter-reset:st;list-style:none;padding:0;margin:0;display:grid;gap:10px}
+.steps li{counter-increment:st;display:flex;gap:12px;align-items:flex-start}
+.steps li::before{content:counter(st);flex:none;width:28px;height:28px;border-radius:50%;background:var(--blue);color:#fff;font-weight:800;display:grid;place-items:center}
+.lr fieldset{border:1px solid var(--line);border-radius:12px;padding:10px 12px 12px;margin:12px 0 0;min-width:0}
+.lr legend{font-weight:800;padding:0 6px}
+.lr .opts{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+.lr .opts label{display:flex;gap:8px;align-items:center;border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;margin:0;font-weight:700;flex:1 1 140px;cursor:pointer}
+.lr .opts label:has(input:checked){border-color:var(--blue);background:var(--blue-l)}
+.lr .opts input{width:auto;margin:0}
+.lr .chk{display:flex;gap:10px;align-items:flex-start;font-weight:600;font-size:14px;margin-top:12px}.lr .chk input{width:22px;height:22px;flex:none;margin:0}
+.lr .kv{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-size:14px}.lr .kv b{white-space:nowrap}
+.pend{background:#FEF3C7;color:#92400E;border-radius:6px;padding:0 6px;font-weight:800}
+.ts-box{margin-top:12px;min-height:0}
+@media print{header.top,footer,.wa-fab,.no-print{display:none!important}body{background:#fff}.panel{box-shadow:none;border:1px solid #ccc}}
