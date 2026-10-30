@@ -236,3 +236,8 @@ html.tdv-lock,html.tdv-lock body{overflow:hidden}
 @media(min-width:720px){.badges{grid-template-columns:repeat(4,1fr)}}
 .badges div{background:#fff;border-radius:var(--r);box-shadow:var(--shadow);padding:12px;display:flex;gap:10px;align-items:center;font-size:13.5px;line-height:1.25}
 .badges .ic{color:var(--blue);flex:none}
+/* ===== v8: página quieta (sin zoom) ===== */
+html,body{touch-action:manipulation;-webkit-text-size-adjust:100%;text-size-adjust:100%;overflow-x:clip;max-width:100%}
+body{overscroll-behavior-x:none}
+input,select,textarea,.tp-search input,.srch input{font-size:16px!important}
+img,video,iframe{max-width:100%}

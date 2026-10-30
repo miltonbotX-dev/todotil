@@ -98,7 +98,7 @@
     el.innerHTML = `<div class="wrap cols">
       <div class="brand" style="color:#fff"><img src="img/icon.svg" alt=""><span>Todo<b>til</b></span></div>
       <div>${esc(s.tagline || "Lo útil, al mejor precio · Pago contra entrega")}</div>
-      <div><a href="seguimiento.html">Sigue tu pedido</a> · <a href="politicas.html">Garantía y cambios</a>${wa ? ` · <a href="${wa}" target="_blank" rel="noopener">WhatsApp</a>` : ""}</div>
+      <div><a href="seguimiento.html">Sigue tu pedido</a> · <a href="politicas.html">Cambios y envíos</a>${wa ? ` · <a href="${wa}" target="_blank" rel="noopener">WhatsApp</a>` : ""}</div>
       ${wa ? `<a class="foot-wa" href="${wa}" target="_blank" rel="noopener">${waIcon(20)}<span>¿Dudas? Te atendemos por WhatsApp: <b>${waPretty(s)}</b></span></a>` : ""}
       <div style="opacity:.7">Todotil · Perú</div></div>`;
   }

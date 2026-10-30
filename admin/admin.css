@@ -58,3 +58,6 @@ dialog::backdrop{background:rgba(15,23,42,.5)}
 .mprog{margin-top:8px}.mbar{height:10px;border-radius:99px;background:var(--bg);overflow:hidden}.mbar i{display:block;height:100%;width:0;background:var(--blue);transition:width .2s}
 .sImg{display:flex;gap:10px;align-items:center}.sImg img{width:56px;height:56px;border-radius:10px;object-fit:cover;background:var(--bg)}
 .slogo{width:28px;height:28px;border-radius:6px;object-fit:cover}
+/* v8: sin zoom */
+html,body{touch-action:manipulation;overflow-x:clip}
+input,select,textarea{font-size:16px!important}

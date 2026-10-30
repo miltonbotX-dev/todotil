@@ -465,8 +465,8 @@
       <p class="hint" style="margin:6px 0 0">Se usa cuando no hay una tarifa en la pestaña Envíos. Se cobra por paquete (proveedor).</p></div>
       <label>Texto de envío</label><textarea id="s_ship" rows="2">${esc(s.shipping_text || "")}</textarea>
       <label>Medios de pago</label><textarea id="s_pay" rows="2">${esc(s.payment_text || "")}</textarea>
-      <label>Garantía</label><textarea id="s_war" rows="5">${esc(s.warranty_text || "")}</textarea>
-      <label>Cambios y devoluciones</label><textarea id="s_pol" rows="4">${esc(s.policies_text || "")}</textarea>
+      <label>Cambio si llega dañado (texto principal)</label><textarea id="s_war" rows="5">${esc(s.warranty_text || "")}</textarea>
+      <label>Cómo pedir un cambio</label><textarea id="s_pol" rows="4">${esc(s.policies_text || "")}</textarea>
       <div style="margin-top:14px"><button class="btn btn-main" id="sSave">${ic("check")} Guardar ajustes</button></div></div>`;
     $("#sSave").onclick = async () => {
       const w = $("#s_whatsapp").value.replace(/\D/g, "");

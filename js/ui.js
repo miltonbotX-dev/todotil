@@ -1,6 +1,7 @@
 // Todotil UI · iconos SVG propios (estilo trazo, sin CDN) + ventanas y avisos personalizados.
 (function () {
   const P = {
+    packageCheck: '<path d="m16 16 2 2 4-4"/><path d="M21 10V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l2-1.14"/><path d="m7.5 4.27 9 5.15"/><polyline points="3.29 7 12 12 20.71 7"/><line x1="12" x2="12" y1="22" y2="12"/>',
     share: '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.59 13.51 6.83 3.98M15.41 6.51l-6.82 3.98"/>',
     sort: '<path d="m3 16 4 4 4-4M7 20V4M21 8l-4-4-4 4M17 4v16"/>',
     truck: '<path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.62l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/>',
@@ -326,4 +327,18 @@
     new MutationObserver((ms) => { for (const m of ms) for (const n of m.addedNodes) if (n.nodeType === 1) { if (n.tagName === "SELECT") enhanceSelect(n); else if (n.querySelector) { enhanceAll(n); if (n.classList.contains("tdv")) mountPlayer(n); else mountPlayers(n); killNative(n.parentNode || n); } } })
       .observe(document.body, { childList: true, subtree: true });
   });
+
+  // v8: la página se mantiene quieta (sin pellizcar ni doble toque para ampliar)
+  (function noZoom() {
+    const stop = (e) => e.preventDefault();
+    ["gesturestart", "gesturechange", "gestureend"].forEach((t) => document.addEventListener(t, stop, { passive: false }));
+    document.addEventListener("touchmove", (e) => { if (e.touches && e.touches.length > 1) e.preventDefault(); }, { passive: false });
+    let last = 0;
+    document.addEventListener("touchend", (e) => {
+      const now = Date.now();
+      if (now - last < 300 && !e.target.closest("input,textarea,select,button,a,label,summary,[role=button],[contenteditable],.tdv")) e.preventDefault();
+      last = now;
+    }, { passive: false });
+    document.addEventListener("wheel", (e) => { if (e.ctrlKey) e.preventDefault(); }, { passive: false });
+  })();
 })();

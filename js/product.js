@@ -33,7 +33,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       <div class="perks">
         <div>${ic("wallet")}<span><b>Pagas al recibir</b> · sin adelantos ni tarjetas</span></div>
         <div>${ic("truck")}<span>${esc(s.shipping_text || "Envío a domicilio")}</span></div>
-        <div>${ic("shield")}<span><b>Garantía de 10 días</b> · si llega incompleto, roto, no funciona o es diferente. <a href="politicas.html">Ver detalles</a></span></div>
+        <div>${ic("packageCheck")}<span><b>Cambio si llega dañado, incompleto o equivocado</b> · avísanos dentro de las 48 horas. <a href="politicas.html">Ver detalles</a></span></div>
       </div>
       ${p.is_combo ? `<div class="combo" id="comboBox"><b>${ic("layers")} Este combo incluye</b><ul id="comboList"><li>Cargando…</li></ul><small>Todo sale del mismo almacén: llega en un solo paquete.</small></div>` : ""}
       ${p.video_url ? `<div><h2 style="font-size:18px;margin:6px 0 8px">Míralo en acción</h2>${videoHTML(p.video_url)}</div>` : ""}
@@ -41,7 +41,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       <div><h2 style="font-size:18px;margin:6px 0 8px">Preguntas frecuentes</h2><div class="faq">
         <details><summary>¿Cómo pago?</summary><p>Pagas en efectivo cuando el producto llega a tu puerta. No pedimos adelantos ni datos de tarjeta.</p></details>
         <details><summary>¿Cuánto cuesta el envío y cuánto demora?</summary><p>Después de tu pedido te escribimos por WhatsApp para confirmar el costo de envío a tu distrito y la fecha estimada de entrega.</p></details>
-        <details><summary>¿Y si llega roto o no funciona?</summary><p>Tienes garantía de 10 días: si llega incompleto, roto, no funciona o es diferente, te lo cambiamos. <a href="politicas.html">Ver garantía</a>.</p></details>
+        <details><summary>¿Y si llega dañado o no es lo que pedí?</summary><p>Revisa tu pedido al recibirlo. Si llega dañado, incompleto o no es lo que pediste, escríbenos por WhatsApp dentro de las 48 horas con fotos y te lo cambiamos. <a href="politicas.html">Ver cambios y envíos</a>.</p></details>
         <details><summary>¿Puedo pedir por WhatsApp?</summary><p>¡Claro! Toca el botón verde de WhatsApp y te atendemos personalmente.</p></details>
       </div></div>
       <div><button type="button" class="share-btn" id="share">${ic("share", 16)} Compartir</button></div>
