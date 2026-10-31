@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const s = await api.settings();
   const pend = '<span class="pend">por completar</span>';
   const P = { name: s.legal_name, ruc: s.ruc, address: s.legal_address };
-  const provHTML = (p) => `<b>Proveedor</b><span>${p.name ? esc(p.name) : "Todotil · " + pend}</span><b>RUC</b><span>${p.ruc ? esc(p.ruc) : pend}</span><b>Domicilio</b><span>${p.address ? esc(p.address) : pend}</span><b>Web</b><span>miltonbotx-dev.github.io/todotil</span>`;
+  const provHTML = (p) => `<b>Proveedor</b><span>${p.name ? esc(p.name) : "Todotil · " + pend}</span><b>RUC</b><span>${p.ruc ? esc(p.ruc) : pend}</span><b>Domicilio</b><span>${p.address ? esc(p.address) : pend}</span><b>Web</b><span>todotil.com</span>`;
   $("#prov").innerHTML = provHTML(P);
   const now = new Date();
   $("#today").textContent = now.toLocaleDateString("es-PE", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "America/Lima" });
