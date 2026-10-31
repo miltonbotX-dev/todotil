@@ -108,7 +108,7 @@
   function header() {
     const el = $("#top"); if (!el) return;
     el.innerHTML = `<div class="strip">${ic("truck", 15)} Pago contra entrega · Pagas cuando lo recibes</div>
-      <div class="wrap"><a class="brand" href="index.html"><img src="img/icon.svg" alt=""><span>Todo<b>til</b></span></a>
+      <div class="wrap"><a class="brand" href="index.html"><img src="img/icon.svg?v=12" alt=""><span>Todo<b>til</b></span></a>
       <nav><a class="icon-btn" href="seguimiento.html" aria-label="Sigue tu pedido">${ic("package", 20)}<span class="hide-s">Mi pedido</span></a>
       <a class="icon-btn" href="carrito.html" aria-label="Carrito">${ic("cart", 20)}<span class="badge" id="cartCount" hidden>0</span></a></nav></div>`;
     cart.badge();
@@ -122,7 +122,7 @@
     const s = await api.settings();
     const wa = waLink(s, "Hola Todotil, tengo una consulta");
     el.innerHTML = `<div class="wrap cols">
-      <div class="brand" style="color:#fff"><img src="img/icon.svg" alt=""><span>Todo<b>til</b></span></div>
+      <div class="brand" style="color:#fff"><img src="img/icon.svg?v=12" alt=""><span>Todo<b>til</b></span></div>
       <div>${esc(s.tagline || "Lo útil, al mejor precio · Pago contra entrega")}</div>
       <div class="foot-links"><a href="como-comprar.html">Cómo comprar</a> · <a href="seguimiento.html">Sigue tu pedido</a> · <a href="politicas.html">Cambios y envíos</a> · <a href="privacidad.html">Privacidad</a>${wa ? ` · <a href="${wa}" target="_blank" rel="noopener">WhatsApp</a>` : ""}</div>
       ${s.business_hours ? `<div>${ic("clock", 15)} Atención: ${esc(s.business_hours)}</div>` : ""}
