@@ -9,6 +9,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     const before = cart.get(), after = before.filter((i) => by[i.slug]).map((i) => ({ ...i, name: by[i.slug].name, price: Number(by[i.slug].price), image: (by[i.slug].images || [])[0] || i.image }));
     cart.set(after); if (after.length < before.length) TD.toast("Quitamos un producto que ya no está disponible", "info");
   } catch {}
+  // Meta Pixel: InitiateCheckout al abrir el checkout con productos (valor = total de productos)
+  try { const it = cart.get(); if (it.length) TD.track("InitiateCheckout", null, 1, { value: it.reduce((a, i) => a + Number(i.price) * i.qty, 0), currency: "PEN", content_ids: it.map((i) => i.slug), content_type: "product", num_items: it.reduce((a, i) => a + i.qty, 0) }); } catch (_) {}
 
   // ---- Ubigeo: departamento → provincia → distrito ----
   const U = window.UBIGEO || {};
@@ -141,6 +143,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       localStorage.setItem(SAVE, JSON.stringify(keep));
       sessionStorage.setItem("todotil.last", JSON.stringify({ ...res, last4: phone.slice(-4) }));
       cart.clear();
+      if (window.fbq) await new Promise((r) => setTimeout(r, 400)); // deja salir el evento Purchase antes de cambiar de página
       location.href = "gracias.html?c=" + encodeURIComponent(res.public_code);
     } catch (ex) { if (ts) ts.reset(); fail(ex.message); btn.disabled = false; btn.textContent = "Confirmar pedido · pago contra entrega"; }
   });

@@ -135,18 +135,24 @@
     en_camino: "En camino", entregado: "Entregado", cancelado: "Cancelado", devuelto: "Devuelto",
   };
 
-  // Meta Pixel (se activa solo si TD_CONFIG.PIXEL_ID tiene valor)
-  if (C.PIXEL_ID && !window.fbq) {
+  // Meta Pixel (se activa solo si TD_CONFIG.PIXEL_ID tiene valor; nunca en /admin/)
+  const PX = C.PIXEL_ID && !/\/admin\//.test(location.pathname);
+  if (PX && !window.fbq) {
     !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version="2.0";n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,"script","https://connect.facebook.net/en_US/fbevents.js");
-    if (!/\/admin\//.test(location.pathname)) { fbq("init", C.PIXEL_ID); fbq("track", "PageView"); }
+    fbq("init", C.PIXEL_ID); fbq("track", "PageView");
   }
   function track(ev, p, qty = 1, extra = {}) {
     try {
-      if (!window.fbq || !C.PIXEL_ID) return;
+      if (!PX || !window.fbq) return;
       const d = p ? { content_ids: [String(p.slug || p.id)], content_name: p.name, content_type: "product", value: Number(p.price) * qty, currency: "PEN" } : {};
       fbq("track", ev, Object.assign(d, extra));
     } catch (_) {}
   }
+  // Contact: clic en cualquier botón/enlace de WhatsApp de la tienda (no cuenta "compartir" sin número)
+  if (PX) document.addEventListener("click", (e) => {
+    const a = e.target.closest && e.target.closest('a[href^="https://wa.me/"]');
+    if (a && /^https:\/\/wa\.me\/\d/.test(a.href)) track("Contact", null, 1, { content_name: location.pathname.replace(/^\//, "") || "index.html" });
+  }, true);
   window.TD = { eta, etaTxt, ETA, track, $, esc, money, api, cart, waLink, waIcon, setWaText, toast, ic, cardHTML, header, footer, STATUS };
   document.addEventListener("DOMContentLoaded", () => { header(); footer(); waFab(); });
 })();
